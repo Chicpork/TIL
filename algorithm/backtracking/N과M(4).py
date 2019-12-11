@@ -1,0 +1,12 @@
+n,m = input().split()
+
+def backtracking(in_str, n, m):
+    for i in range(int(in_str[-1] if in_str != "" else 1), int(n)+1):
+        new_in_str = in_str + str(i)
+        if m == "1":
+            [print(x,end=' ') for x in new_in_str]
+            print()
+        else:
+            backtracking(new_in_str, n, str(int(m) - 1))
+
+backtracking("", n, m)
