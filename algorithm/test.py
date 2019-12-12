@@ -4,6 +4,7 @@ a = [1,2,3]
 for i in range(3,3):
     print(i)
 
+print(a.index(3))
 # a = "abcde\n"
 # print(a[:-1])
 
