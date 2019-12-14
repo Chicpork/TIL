@@ -1,7 +1,8 @@
+import sys
 cnt = int(input())
 arr = []
 for i in range(cnt):
-    arr.append(int(input()))
+    arr.append(int(sys.stdin.readline()))
 
 arr.sort()
 
