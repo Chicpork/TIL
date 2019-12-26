@@ -1,25 +1,6 @@
 import sys
-import copy
 
-arr_2d = [list(map(int,sys.stdin.readline().split())) for i in range(9)]
-isFound = False
-
-def isPossibleNumber(arr_2d_in, x, y, n):
-    if n in arr_2d_in[x]:
-        return False
-    
-    for i in range(9):
-        if n == arr_2d_in[i][y]:
-            return False
-    
-    idx = int(x/3)*3
-    idy = int(y/3)*3
-    for t_x in range(idx, idx+3):
-        for t_y in range(idy, idy+3):
-            if n == arr_2d_in[t_x][t_y]:
-                return False
-    
-    return True
+arr_2d = [list(map(int,sys.stdin.readline().split())) for _ in range(9)]
 
 def getZero(arr_2d):
     t_arr = []
@@ -30,27 +11,43 @@ def getZero(arr_2d):
     
     return t_arr
 
-def dfs(arr_2d_in, zeroXys, n):
-    global arr_2d
-    global isFound
+def isPossibleNumber(arr_2d_in, x, y, n):
+    if n in arr_2d_in[x]:
+        return False
+    
+    for i in range(9):
+        if n == arr_2d_in[i][y]:
+            return False
+    
+    idx = x//3*3
+    idy = y//3*3
+    for t_x in range(idx, idx+3):
+        for t_y in range(idy, idy+3):
+            if n == arr_2d_in[t_x][t_y]:
+                return False
+    
+    return True
+
+def dfs(n):
     
     if len(zeroXys) == n:
-        arr_2d = arr_2d_in
-        isFound = True
-        return
+        for x in arr_2d:
+            for y in x:
+                print(y, end=" ")
+            print()
+
+        sys.exit(0)
     
     for i in range(1,10):
-        if isPossibleNumber(arr_2d_in, zeroXys[n][0], zeroXys[n][1], i):
-            t_arr_2d_in = copy.deepcopy(arr_2d_in)
-            t_arr_2d_in[zeroXys[n][0]][zeroXys[n][1]] = i
-            dfs(t_arr_2d_in, zeroXys, n+1)
+        if isPossibleNumber(arr_2d, zeroXys[n][0], zeroXys[n][1], i):
+            arr_2d[zeroXys[n][0]][zeroXys[n][1]] = i
+            dfs(n+1)
         
-        if isFound:
-            return
+        arr_2d[zeroXys[n][0]][zeroXys[n][1]] = 0
 
 zeroXys = getZero(arr_2d)
 
-dfs(arr_2d, zeroXys, 0)
+dfs(0)
 
 arr_2d = [list(map(str, x)) for x in arr_2d]
 [print(' '.join(x)) for x in arr_2d]
