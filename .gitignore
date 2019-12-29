@@ -180,5 +180,6 @@ fabric.properties
 # my
 data/
 .vscode/
+*.pyc
 
 # End of https://www.gitignore.io/api/node,webstorm
