@@ -29,18 +29,14 @@ public class DoublyLinkedList<T> {
     }
 
     protected Node getLast() {
-        return this.first;
+        return this.last;
     }
 
     protected void setLast(Node node) {
         this.last = node;
     }
 
-    public int getLinkedListSize() {
-        return linkedListSize;
-    }
-
-    public void setLinkedListSize(int linkedListSize) {
+    protected void setLinkedListSize(int linkedListSize) {
         this.linkedListSize = linkedListSize;
     }
 
@@ -51,10 +47,17 @@ public class DoublyLinkedList<T> {
      */
     public void add(T data) {
         Node node = new Node(data);
-        node.prevNode = this.last;
-        this.last.nextNode = node;
-        this.last = node;
-        this.linkedListSize++;
+
+        if (this.linkedListSize == 0) {
+            this.first = node;
+            this.last = node;
+            this.linkedListSize = 1;
+        } else {
+            node.prevNode = this.last;
+            this.last.nextNode = node;
+            this.last = node;
+            this.linkedListSize++;
+        }
     }
 
     /**
@@ -64,7 +67,7 @@ public class DoublyLinkedList<T> {
      * @param index the position you want to insert
      */
     public void add(T data, int index) {
-        if (index < 0 || index >= this.linkedListSize) {
+        if (index < 0 || index > this.linkedListSize) {
             return;
         }
 
@@ -150,21 +153,21 @@ public class DoublyLinkedList<T> {
 
         T output = null;
         if (index == 0) {
+            output = this.first.data;
             this.first = this.first.nextNode;
             this.first.prevNode = null;
-            output = this.first.data;
             this.linkedListSize--;
         } else if (index == linkedListSize - 1) {
+            output = this.last.data;
             Node nodeAtLast = getNodeAtIndex(index - 1);
             nodeAtLast.nextNode = null;
             this.last = nodeAtLast;
-            output = this.last.data;
             this.linkedListSize--;
         } else {
             Node nodeAtIndex = getNodeAtIndex(index);
+            output = nodeAtIndex.data;
             nodeAtIndex.nextNode.prevNode = nodeAtIndex.prevNode;
             nodeAtIndex.prevNode.nextNode = nodeAtIndex.nextNode;
-            output = nodeAtIndex.data;
             this.linkedListSize--;
         }
         return output;
@@ -186,12 +189,14 @@ public class DoublyLinkedList<T> {
     @Override
     public String toString() {
         String output = "[";
-        Node tempNode = this.first;
-        for (int i = 0; i < this.linkedListSize - 1; i++) {
-            output += tempNode.data.toString() + ", ";
-            tempNode = tempNode.nextNode;
+        if (this.first != null) {
+            Node tempNode = this.first;
+            for (int i = 0; i < this.linkedListSize - 1; i++) {
+                output += tempNode.data.toString() + ", ";
+                tempNode = tempNode.nextNode;
+            }
+            output += tempNode.data.toString();
         }
-        output += tempNode.data.toString();
         output += "]";
         return output;
     }

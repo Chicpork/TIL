@@ -142,12 +142,14 @@ public class LinkedList<T> {
     @Override
     public String toString() {
         String output = "[";
-        Node tempNode = this.first;
-        for (int i = 0; i < this.linkedListSize - 1; i++) {
-            output += tempNode.data.toString() + ", ";
-            tempNode = tempNode.nextNode;
+        if (this.first != null) {
+            Node tempNode = this.first;
+            for (int i = 0; i < this.linkedListSize - 1; i++) {
+                output += tempNode.data.toString() + ", ";
+                tempNode = tempNode.nextNode;
+            }
+            output += tempNode.data.toString();
         }
-        output += tempNode.data.toString();
         output += "]";
         return output;
     }

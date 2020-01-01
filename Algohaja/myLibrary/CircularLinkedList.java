@@ -12,22 +12,22 @@ public class CircularLinkedList<T> extends DoublyLinkedList<T> {
         super(data);
     }
 
+    @Override
+    public T get(int index) {
+        index = getCircularIndex(index);
+
+        return super.get(index);
+    }
+
     /**
      * insert data at last of arrayList
      * @param data data you want to insert
      */
     @Override
     public void add(T data) {
-        if(super.getSize() <= 1) {
-            Node node = new Node(data);
-            node.setPrevNode(super.getFirst());
-            node.setNextNode(super.getFirst());
-            super.getFirst().setNextNode(node);
-            super.setSize(super.getSize()+1);
-        } else {
-            super.add(data);
-            super.getLast().setNextNode(super.getFirst());
-        }
+        super.add(data);
+        super.getFirst().setPrevNode(super.getLast());
+        super.getLast().setNextNode(super.getFirst());
     }
 
     /**
@@ -37,21 +37,45 @@ public class CircularLinkedList<T> extends DoublyLinkedList<T> {
      */
     @Override
     public void add(T data, int index) {
-        super.add(data, index);
+        index = getCircularIndex(index);
+        
         if (index == 0) {
+            super.add(data, index);
             super.getFirst().setPrevNode(super.getLast());
+            super.getLast().setNextNode(super.getFirst());
+        } else if (index == super.getSize()) {
+            this.add(data);
+        } else {
+            super.add(data, index);
         }
     }
 
     @Override
     public T remove(int index) {
-        T tempT = super.remove(index);
-        if (index == 0) {
-            super.getFirst().setPrevNode(super.getLast());
-        } else if (index == super.getSize() - 1) {
-            super.getLast().setNextNode(super.getFirst());            
+        index = getCircularIndex(index);
+        
+        T tempT = null;
+        if (super.getSize() == 1) {
+            tempT = super.get(0);
+            super.setFirst(null);
+            super.setLast(null);
+            super.setSize(0);
+        } else {
+            tempT = super.remove(index);
+            if (index == 0) {
+                super.getFirst().setPrevNode(super.getLast());
+            } else if (index == super.getSize() - 1) {
+                super.getLast().setNextNode(super.getFirst());            
+            }
         }
 
         return tempT;
+    }
+
+    private int getCircularIndex(int index) {
+        if (index > super.getSize()-1) {
+            index %= super.getSize();
+        }
+        return index;
     }
 }
