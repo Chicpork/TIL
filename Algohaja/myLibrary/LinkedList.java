@@ -7,6 +7,21 @@ public class LinkedList<T> {
     private Node last; // 마지막 노드 저장
     private int linkedListSize; // 노드 개수 저장
 
+    private class Node {
+        private T data; // 데이터 필드
+        private Node nextNode; // 다음 노드 저장을 위한 값
+
+        public Node(T data) {
+            this.data = data;
+            this.nextNode = null;
+        }
+
+        @Override
+        public String toString() {
+            return this.data.toString();
+        }
+    }
+
     public LinkedList() {
         this.first = null;
         this.last = null;
@@ -111,20 +126,20 @@ public class LinkedList<T> {
 
         T output = null;
         if (index == 0) {
-            this.first = this.first.nextNode;
             output = this.first.data;
+            this.first = this.first.nextNode; // 1개만 있는 경우 null
             this.linkedListSize--;
-        } else if (index == linkedListSize-1) {
-            Node nodeAtLast = getNodeAtIndex(index - 1);
-            nodeAtLast.nextNode = null;
-            this.last = nodeAtLast;
+        } else if (index == this.linkedListSize - 1) {
             output = this.last.data;
+            Node nodeAtLastBefore = getNodeAtIndex(index - 1);
+            nodeAtLastBefore.nextNode = null;
+            this.last = nodeAtLastBefore;
             this.linkedListSize--;
         } else {
             Node nodeAtIndexBefore = getNodeAtIndex(index - 1);
             Node nodeAtIndex = getNodeAtIndex(index);
-            nodeAtIndexBefore.nextNode = nodeAtIndex.nextNode;
             output = nodeAtIndex.data;
+            nodeAtIndexBefore.nextNode = nodeAtIndex.nextNode;
             this.linkedListSize--;
         }
         return output;
@@ -152,62 +167,5 @@ public class LinkedList<T> {
         }
         output += "]";
         return output;
-    }
-
-    private class Node {
-        private T data; // 데이터 필드
-        private Node nextNode; // 다음 노드 저장을 위한 값
-
-        public Node(T data) {
-            this.data = data;
-            this.nextNode = null;
-        }
-
-        @Override
-        public String toString() {
-            return this.data.toString();
-        }
-    }
-
-    private class LinkedListIterator {
-        private Node next;
-        private int nextIndex;
-
-        public LinkedListIterator() {
-            next = first;
-            nextIndex = 1;
-
-        }
-
-        public boolean hasNext() {
-            if (nextIndex >= linkedListSize) {
-                return false;
-            }
-            return true;
-        }
-
-        public T next() {
-            T data = next.data;
-            next = next.nextNode;
-            nextIndex++;
-            return data;
-        }
-
-        public void add(T data) {
-            Node node = new Node(data);
-            if (next.nextNode == null) {
-                next.nextNode = node;
-            } else {
-                node.nextNode = next.nextNode;
-                next.nextNode = node;
-            }
-
-            linkedListSize++;
-            this.nextIndex++;
-        }
-
-        public T remove() {
-            return LinkedList.this.remove(nextIndex - 1);
-        }
     }
 }
