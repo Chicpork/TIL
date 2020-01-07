@@ -12,6 +12,9 @@ public class ArrayList<T> {
     }
 
     public ArrayList(int size) {
+        if (size < 1) {
+            throw new ArrayIndexOutOfBoundsException(size);
+        }
         this.arrayList = new Object[size];
         this.arrayListSize = 0;
     }
