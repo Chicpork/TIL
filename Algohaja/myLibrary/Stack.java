@@ -54,6 +54,10 @@ public class Stack<T> {
         return (T) stack[stackIndex];
     }
 
+    public int size() {
+        return stackIndex+1;
+    }
+
     @Override
     public String toString() {
         if (isEmpty()) {
