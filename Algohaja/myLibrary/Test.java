@@ -5,18 +5,38 @@ public class Test {
 
     public static void main(String[] args) {
 
-        Stack<String> stack = new Stack<>();
-        stack.push("1");
-        stack.push("2");
-        stack.push("3");
-        stack.push("4");
-        System.out.println(stack.toString());
+        Queue<Integer> queue = new Queue<>();
+        queue.push(1);
+        queue.push(2);
+        queue.push(3);
+        queue.push(4);
+        queue.push(5);
+        System.out.println(queue.toString());
+        System.out.println(queue.pop());
+        System.out.println(queue.peek());
+        System.out.println(queue.pop());
+        System.out.println(queue.peek());
+        System.out.println(queue.pop());
+        System.out.println(queue.peek());
+        System.out.println(queue.pop());
+        System.out.println(queue.peek());
+        System.out.println(queue.pop());
+        System.out.println(queue.peek());
+        System.out.println(queue.toString());
+
+
+        // Stack<String> stack = new Stack<>();
+        // stack.push("1");
+        // stack.push("2");
+        // stack.push("3");
+        // stack.push("4");
+        // System.out.println(stack.toString());
         
-        System.out.println(stack.pop());
-        System.out.println(stack.toString());
+        // System.out.println(stack.pop());
+        // System.out.println(stack.toString());
         
-        System.out.println(stack.peek());
-        System.out.println(stack.toString());
+        // System.out.println(stack.peek());
+        // System.out.println(stack.toString());
         
         // CircularLinkedList<String> t = new CircularLinkedList<>();
         // t.add("hi1");
