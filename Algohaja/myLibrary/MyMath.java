@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 public class MyMath {
 
     public static ArrayList<int[]> combination(int n, int r) {
