@@ -8,18 +8,13 @@ class Piece {
     constructor(ctx) {
         this.ctx = ctx;
         this.spawn();
+        this.draw();
     }
 
     spawn() {
-        this.color = 'blue';
-        this.shape = [
-            [2, 0, 0],
-            [2, 2, 2],
-            [0, 0, 0]
-        ];
-
-        // Starting position.
-        // block position start at left upper corner.
+        let type = this.randomizeType(SHAPES.length);
+        this.color = COLORS[type];
+        this.shape = SHAPES[type];
         this.x = 3;
         this.y = 0;
     }
@@ -38,5 +33,11 @@ class Piece {
     move(p) {
         this.x = p.x;
         this.y = p.y;
+
+        this.shape = p.shape;
+    }
+
+    randomizeType(types) {
+        return Math.floor(Math.random() * types);
     }
 }
