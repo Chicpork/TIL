@@ -55,6 +55,7 @@ class Board {
       this.piece.move(p);
     } else {
       this.freeze();
+      this.clearLines();
 
       this.piece = new Piece(this.ctx);
     }
@@ -79,10 +80,19 @@ class Board {
     this.grid.forEach((row, y) => {
       row.forEach((value, x) => {
         if (value > 0) {
-          this.ctx.fillStyle = COLORS[value]+1;
+          this.ctx.fillStyle = COLORS[value-1];
           this.ctx.fillRect(x,y,1,1);
         }
       });
+    });
+  }
+
+  clearLines() {
+    this.grid.forEach((row, y) => {
+      if (row.every((value) => value > 0)) {
+        this.grid.splice(y, 1);
+        this.grid.unshift(Array(COLS).fill(0));
+      }
     });
   }
 }
