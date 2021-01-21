@@ -82,6 +82,46 @@ def merge(left, right):
     out_list = out_list + left + right
     return out_list
 
+def max_heapify_without_recursion(A, i, heap_size=-1):
+    if heap_size < 0:
+        heap_size = len(A)
+
+    max_index = i
+
+    while True:
+        left = 2*i
+        right = left+1
+
+        if left > heap_size:
+            break
+
+        if left <= heap_size and A[max_index-1] < A[left-1]:
+            max_index = left
+        
+        if right <= heap_size and A[max_index-1] < A[right-1]:
+            max_index = right
+        
+        if max_index != i:
+            A[i-1], A[max_index-1] = A[max_index-1], A[i-1]
+            i = max_index
+        else:
+            break
+
+def build_max_heapify(A):
+    for i in range(int(len(A)/2), 0, -1):
+        max_heapify_without_recursion(A, i)
+
+def heap_sort(A):
+    heap_size = len(A)
+    build_max_heapify(A)
+
+    for i in range(len(A)-1, 0, -1):
+        A[0], A[i] = A[i], A[0]
+        heap_size -= 1
+        max_heapify_without_recursion(A, 1, heap_size)
+    
+    return A
+
 n = 10 # size of random array
 test_arr = random.sample(range(n), n)
 #print(test_arr)
@@ -99,3 +139,4 @@ test_arr = random.sample(range(n), n)
 # print(selection_sort2([3,5,6,4,2,1]))
 print(quick_sort(test_arr))
 print(merge_sort(test_arr))
+print(heap_sort(test_arr))
