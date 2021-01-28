@@ -122,6 +122,26 @@ def heap_sort(A):
     
     return A
 
+def quicksort_partition(A, p, r):
+    last = A[r]
+    i = p - 1
+    for j in range(p, r):
+        if A[j] <= last:
+            i += 1
+            A[i], A[j] = A[j], A[i]
+    
+    i += 1
+    A[i], A[r] = A[r], A[i]
+    return i
+
+def quicksort(A, p, r):
+    if p < r:
+        q = quicksort_partition(A, p, r)
+        quicksort(A, p, q-1)
+        quicksort(A, q+1, r)
+    
+    return A
+
 n = 10 # size of random array
 test_arr = random.sample(range(n), n)
 #print(test_arr)
@@ -137,6 +157,14 @@ test_arr = random.sample(range(n), n)
 # print("time : ",time.time() - s_time)
 
 # print(selection_sort2([3,5,6,4,2,1]))
+print(test_arr)
 print(quick_sort(test_arr))
+print()
+print(test_arr)
 print(merge_sort(test_arr))
+print()
+print(test_arr)
+print(quicksort(test_arr, 0, len(test_arr)-1))
+print()
+print(test_arr)
 print(heap_sort(test_arr))
