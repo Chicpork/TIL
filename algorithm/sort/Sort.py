@@ -132,6 +132,10 @@ def quicksort_partition(A, p, r):
     
     i += 1
     A[i], A[r] = A[r], A[i]
+
+    # i가 r과 같다면 Divide and conquer 가 제대로 되지 않고 한쪽 방향으로만 sorting 이루어짐
+    if i == r:
+        i = (p + r)//2
     return i
 
 def quicksort(A, p, r):
@@ -141,6 +145,34 @@ def quicksort(A, p, r):
         quicksort(A, q+1, r)
     
     return A
+
+def randomized_quicksort_partition(A, p, r):
+    rand_r = random.randrange(p, r)
+    A[r], A[rand_r] = A[rand_r], A[r]
+
+    last = A[r]
+    i = p - 1
+    for j in range(p, r):
+        if A[j] <= last:
+            i += 1
+            A[i], A[j] = A[j], A[i]
+    
+    i += 1
+    A[i], A[r] = A[r], A[i]
+
+    # i가 r과 같다면 Divide and conquer 가 제대로 되지 않고 한쪽 방향으로만 sorting 이루어짐
+    if i == r:
+        i = (p + r)//2
+    return i
+
+def quicksort(A, p, r):
+    if p < r:
+        q = randomized_quicksort_partition(A, p, r)
+        quicksort(A, p, q-1)
+        quicksort(A, q+1, r)
+    
+    return A
+
 
 n = 10 # size of random array
 test_arr = random.sample(range(n), n)
@@ -169,3 +201,5 @@ print()
 test_arr = [13, 19, 9, 5 , 12 , 8 , 7, 4 , 21 , 2 , 6, 11]
 print(test_arr)
 print(quicksort(test_arr, 0, len(test_arr)-1))
+
+print(quicksort_partition([1,1,1], 0, 2))
