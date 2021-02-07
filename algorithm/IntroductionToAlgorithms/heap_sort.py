@@ -82,6 +82,17 @@ def build_max_heapify(A):
         max_heapify_without_recursion(A, i)
 
 
+def heap_sort(A):
+    heap_size = len(A)
+    build_max_heapify(A)
+
+    for i in range(len(A)-1, 0, -1):
+        A[0], A[i] = A[i], A[0]
+        heap_size -= 1
+        max_heapify_without_recursion(A, 1, heap_size)
+    
+    return A
+
 # max_heapify(A,3) # [27, 17, 10, 16, 13, 9, 1, 5, 7, 12, 4, 8, 3, 0]
 # max_heapify2(A,2)
 # max_heapify3(A,3)
