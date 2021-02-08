@@ -5,10 +5,6 @@ import json
 import time
 from operator import itemgetter
 
-
-
-
-
 def get_data_from_site(product_name:str, site:str, response):
     results = []
     if site == '11st':
@@ -33,8 +29,9 @@ def get_data_from_site(product_name:str, site:str, response):
 
             # link
             link = item_card.select_one(".text--itemcard_title a")['href']
+            item_no = link.split("itemno=")[1].split("?")[0]
 
-            results.append({"product": product_name, "site":site, "title": title, "price": price, "link": link})
+            results.append({"product": product_name, "site":site, "title": title, "price": price, "link": link, "item_no": item_no})
     elif site == 'gmarket':
         item_cards = html.select("#section__inner-content-body-container div.box__information > div.box__information-major")
         for item_card in item_cards:
@@ -50,8 +47,9 @@ def get_data_from_site(product_name:str, site:str, response):
 
             # link
             link = a_link['href']
+            item_no = link.split("goodscode=")[1].split("?")[0]
 
-            results.append({"product": product_name, "site":site, "title": title, "price": price, "link": link})
+            results.append({"product": product_name, "site":site, "title": title, "price": price, "link": link, "item_no": item_no})
     elif site == '11st':
         json_data = json.loads(html)
         prd_lists = ["rcmdPrdList", "focusPrdList", "powerPrdList", "plusPrdList", "commonPrdList"]
@@ -62,31 +60,13 @@ def get_data_from_site(product_name:str, site:str, response):
                 title = product["prdNm"]
                 price = product["finalPrc"].replace(",", "")
                 link = product["productDetailUrl"]
+                item_no = str(product["prdNo"])
                 
                 # normal product check
                 if not normal_product_check(product_name, title, product["deliveryPriceText"]):
                     continue
 
-                results.append({"product": product_name, "site":site, "title": title, "price": price, "link": link})
-
-        # Version 1
-        # prd_lists = ["rcmdPrdList", "focusPrdList", "powerPrdList", "plusPrdList", "commonPrdList"]
-
-        # for prd_list in prd_lists:
-        #     prd_start_idx = html.find("window.searchDataFactory."+prd_list)
-        #     brace_start_idx = html[prd_start_idx:].find("{")
-        #     brace_end_idx = html[prd_start_idx:].find("};")+1
-        #     products = json.loads(html[prd_start_idx+brace_start_idx:prd_start_idx+brace_end_idx])
-        #     for product in products["items"]:
-        #         title = product["prdNm"]
-        #         price = product["finalPrc"].replace(",", "")
-        #         link = product["productDetailUrl"]
-                
-        #         # normal product check
-        #         if not normal_product_check(title, product["deliveryPriceText"]):
-        #             continue
-
-        #         results.append({"product": product_name, "site":site, "title": title, "price": price, "link": link})
+                results.append({"product": product_name, "site":site, "title": title, "price": price, "link": link, "item_no": item_no})
     elif site == 'timon':
         item_cards = html.select("section.search_deallist .deallist_wrap li.item")
         for item_card in item_cards:
@@ -103,7 +83,9 @@ def get_data_from_site(product_name:str, site:str, response):
             
             # link
             link = a_link['href']
-            results.append({"product": product_name, "site":site, "title": title, "price": price, "link": link})
+            item_no = a_link['data-deal-srl']
+            
+            results.append({"product": product_name, "site":site, "title": title, "price": price, "link": link, "item_no": item_no})
     else:
         print("Not defined site :", site)
     
@@ -170,6 +152,7 @@ def send_noti_to_telegram(items):
 
 if __name__ == '__main__':
     print('start - ' + time.strftime('%Y-%m-%d %H:%M:%S'))
-    results = crawling("해피머니", "43000", "47000")
+    results = crawling("해피머니", "43000", "50000")
     results = sorted(results, key=itemgetter("price"))
-    send_noti_to_telegram(results)
+    print(results)
+    # send_noti_to_telegram(results)

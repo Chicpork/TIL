@@ -183,5 +183,6 @@ data/
 *.pyc
 temp/
 *.class
+secured/
 
 # End of https://www.gitignore.io/api/node,webstorm
