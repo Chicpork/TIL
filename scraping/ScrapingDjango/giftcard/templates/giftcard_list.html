@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    {% load static %}
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Giftcard List</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' type='text/css' media='screen' href='{% static "style.css" %}'>
+    <script src='{% static "main.js" %}'></script>
+</head>
+
+<body>
+    Hello, World!
+    <!-- DivTable.com -->
+    <div class="divTable" style="border: 1px solid #000;">
+        <div class="divTable paleBlueRows">
+            <div class="divTableHeading">
+                <div class="divTableRow">
+                    <div class="divTableHead">Date</div>
+                    <div class="divTableHead">Keyword</div>
+                    <div class="divTableHead">Site</div>
+                    <div class="divTableHead">Title</div>
+                    <div class="divTableHead">Price</div>
+                    <div class="divTableHead">Url</div>
+                    <div class="divTableHead">CD, UD</div>
+                </div>
+            </div>
+            <div class="divTableBody">
+                {% for giftcard in giftcards %}
+                <div class="divTableRow">
+                    <div class="divTableCell">{{giftcard.date}}</div>
+                    <div class="divTableCell">{{giftcard.keyword}}</div>
+                    <div class="divTableCell">{{giftcard.site}}</div>
+                    <div class="divTableHead">{{giftcard.title}}</div>
+                    <div class="divTableCell">{{giftcard.price}}</div>
+                    <div class="divTableHead">{{giftcard.url}}</div>
+                    <div class="divTableHead">{{giftcard.created_date}} , {{giftcard.updated_date}}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

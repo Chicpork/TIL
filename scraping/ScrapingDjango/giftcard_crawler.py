@@ -5,14 +5,25 @@ from urllib import parse
 import json
 import time
 from operator import itemgetter
+from django.utils import timezone
+import logging
 
-trsc_dtm = time.strftime('%Y-%m-%d %H:%M:%S')
-trsc_dt = time.strftime('%Y%m%d')
-
+# django env setup
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', "ScrapingDjango.settings")
 import django
 django.setup()
 from giftcard.models import Giftcard
+
+# trsc dtm
+trsc_dtm = timezone.localtime().strftime('%Y-%m-%d %H:%M:%S')
+trsc_dt = timezone.localtime().strftime('%Y%m%d')
+
+# make logger
+with open("logging.json", "r") as f:
+    config = json.load(f)
+
+logging.config.dictConfig(config)
+logger = logging.getLogger("crawler")
 
 def get_data_from_site(keyword:str, site:str, response):
     results = []
@@ -36,15 +47,17 @@ def get_data_from_site(keyword:str, site:str, response):
             # price
             price = item_card.select_one('.text--price_seller').get_text().replace(",", "")
 
-            # link
-            link = item_card.select_one(".text--itemcard_title a")['href']
-            item_no = link.split("itemno=")[1].split("?")[0]
+            # url
+            url = item_card.select_one(".text--itemcard_title a")['href']
+            item_no = url.split("itemno=")[1].split("?")[0]
 
-            results.append({"keyword": keyword, "site":site, "title": title, "price": price, "link": link, "item_no": item_no})
+            results.append({"keyword": keyword, "site":site, "title": title, "price": price, "url": url, "item_no": item_no})
     elif site == 'gmarket':
         item_cards = html.select("#section__inner-content-body-container div.box__information > div.box__information-major")
         for item_card in item_cards:
             a_link = item_card.select_one("a.link__item")
+
+            # title
             title = a_link.select_one(".text__item").get_text()
 
             # normal product check
@@ -54,11 +67,13 @@ def get_data_from_site(keyword:str, site:str, response):
             # price
             price = item_card.select_one('.box__item-price .box__price-seller .text__value').get_text().replace(",", "")
 
-            # link
-            link = a_link['href']
-            item_no = link.split("goodscode=")[1].split("?")[0]
+            # url
+            url = a_link['href']
 
-            results.append({"keyword": keyword, "site":site, "title": title, "price": price, "link": link, "item_no": item_no})
+            # item_no
+            item_no = url.split("goodscode=")[1].split("?")[0]
+
+            results.append({"keyword": keyword, "site":site, "title": title, "price": price, "url": url, "item_no": item_no})
     elif site == '11st':
         json_data = json.loads(html)
         prd_lists = ["rcmdPrdList", "focusPrdList", "powerPrdList", "plusPrdList", "commonPrdList"]
@@ -68,14 +83,14 @@ def get_data_from_site(keyword:str, site:str, response):
             for product in products["items"]:
                 title = product["prdNm"]
                 price = product["finalPrc"].replace(",", "")
-                link = product["productDetailUrl"]
+                url = product["productDetailUrl"]
                 item_no = str(product["prdNo"])
                 
                 # normal product check
                 if not normal_product_check(keyword, title, product["deliveryPriceText"]):
                     continue
 
-                results.append({"keyword": keyword, "site":site, "title": title, "price": price, "link": link, "item_no": item_no})
+                results.append({"keyword": keyword, "site":site, "title": title, "price": price, "url": url, "item_no": item_no})
     elif site == 'timon':
         item_cards = html.select("section.search_deallist .deallist_wrap li.item")
         for item_card in item_cards:
@@ -91,12 +106,12 @@ def get_data_from_site(keyword:str, site:str, response):
             price = a_link.select_one("div.price_area span.price i.num").get_text().replace(",", "")
             
             # link
-            link = a_link['href']
+            url = a_link['href']
             item_no = a_link['data-deal-srl']
             
-            results.append({"keyword": keyword, "site":site, "title": title, "price": price, "link": link, "item_no": item_no})
+            results.append({"keyword": keyword, "site":site, "title": title, "price": price, "url": url, "item_no": item_no})
     else:
-        print("Not defined site :", site)
+        logger.warning("Not defined site : " + site)
     
     return results
 
@@ -129,22 +144,22 @@ def crawling(keyword, min_price="43000", max_price = "47000"):
         try:
             response = requests.get(url)
         except requests.exceptions.RequestException:
-            results.append({"keyword": "requests Error", "site":site, "title": "error", "price": "error", "link": "error"})
+            results.append({"keyword": "requests Error", "site":site, "title": "error", "price": "error", "url": "error"})
         else:
             if response.status_code == requests.codes.ok:
-                print(site, 'Ok')
+                logger.info(site + ' Ok')
                 results += get_data_from_site(keyword, site, response)
                 pass
             else:
-                results.append({"keyword": response.status_code, "site":site, "title": "error", "price": "error", "link": "error"})
-                print("Error code [",response.status_code,"]")
+                results.append({"keyword": response.status_code, "site":site, "title": "error", "price": "error", "url": "error"})
+                logger.warning("Error code [" + response.status_code + "]")
     
     return results
 
 def add_results_to_db(results):
+    logger.info("Insert Db Start...")
     for giftcard_info in results:
-        if not Giftcard.objects.filter(item_no=giftcard_info["item_no"]).exists():
-            print('insert db')
+        if not Giftcard.objects.filter(date=trsc_dt, item_no=giftcard_info["item_no"], price=giftcard_info["price"]).exists():
             Giftcard.objects.create(date = trsc_dt
                                    ,item_no = giftcard_info["item_no"]
                                    ,is_send = False
@@ -152,33 +167,37 @@ def add_results_to_db(results):
                                    ,site = giftcard_info["site"]
                                    ,title = giftcard_info["title"]
                                    ,price = int(giftcard_info["price"])
-                                   ,link = giftcard_info["link"]
+                                   ,url = giftcard_info["url"]
                                    )
+    
+    logger.info("Insert Db End...")
 
 def send_noti_to_telegram(items):
     if len(items) == 0:
         return
-    f = open("./sang/temp/telegram_bot_info.json", "r", encoding="UTF-8")
-    telegram_bot_info = json.loads(f.read())
-    f.close()
+    
+    with open('./secured/config.json') as f:
+        config = json.load(f)
+        telegram_bot_info = config["TELEGRAM_BOT_INFO"]
     
     for item in items:
         bot_message = ""
         for k, v in item.items():
             bot_message += k + " : " + v + "\n"
         
-        url = 'https://api.telegram.org/bot' + telegram_bot_info["bot_token"] + \
-              '/sendMessage?chat_id=' + telegram_bot_info["bot_chat_id"] + \
+        url = 'https://api.telegram.org/bot' + telegram_bot_info["BOT_TOKEN"] + \
+              '/sendMessage?chat_id=' + telegram_bot_info["BOT_CHAT_ID"] + \
               '&parse_mode=Markdown&text=' + bot_message
         requests.get(url)
         time.sleep(1)
 
 def send_noti_to_telegram_by_db():
+    logger.info("send noti Start...")
     giftcards = Giftcard.objects.filter(is_send=False)
     
-    f = open("./secured/telegram_bot_info.json", "r", encoding="UTF-8")
-    telegram_bot_info = json.loads(f.read())
-    f.close()
+    with open('./secured/config.json') as f:
+        config = json.load(f)
+        telegram_bot_info = config["TELEGRAM_BOT_INFO"]
     
     for giftcard in giftcards:
         bot_message = ''.join(["date : ", giftcard.date, "\n"
@@ -187,23 +206,35 @@ def send_noti_to_telegram_by_db():
                               ,"title : ", giftcard.title, "\n"
                               ,"keyword : ", giftcard.keyword, "\n"
                               ,"price : ", str(giftcard.price), "\n"
-                              ,"link : ", giftcard.link])
+                              ,"url : ", giftcard.url])
         
-        url = 'https://api.telegram.org/bot' + telegram_bot_info["bot_token"] + \
-              '/sendMessage?chat_id=' + telegram_bot_info["bot_chat_id"] + \
-              '&parse_mode=Markdown&text=' + bot_message
-        requests.get(url)
-
-        giftcard.is_send = True
-        giftcard.save()
+        bot_send_url = 'https://api.telegram.org/bot' + telegram_bot_info["BOT_TOKEN"] + \
+                       '/sendMessage?chat_id=' + telegram_bot_info["BOT_CHAT_ID"] + \
+                       '&parse_mode=Markdown&text=' + bot_message
+        try:
+            response = requests.get(bot_send_url)
+        except requests.exceptions.RequestException:
+            try:
+                response = requests.get(bot_send_url)
+            except:
+                logger.warning("Send telegram message Fail!!!")
+                pass
+        else:
+            if response.status_code == requests.codes.ok:
+                giftcard.is_send = True
+                giftcard.save()
+            else:
+                logger.warning("Send telegram message Fail!!! ErrorCode["+response.status_code+"]")
+                pass
 
         time.sleep(1)
+    
+    logger.info("send noti End...")
 
 if __name__ == '__main__':
-    print('start - ' + time.strftime('%Y-%m-%d %H:%M:%S'))
-    # results = crawling("해피머니", "43000", "47000")
-    # results = sorted(results, key=itemgetter("price"))
-    # print(results)
-    # add_results_to_db(results)
+    logger.info('start - ' + trsc_dtm)
+    results = crawling("해피머니", "43000", "47000")
+    results = sorted(results, key=itemgetter("price"))
+    add_results_to_db(results)
     
     send_noti_to_telegram_by_db()
