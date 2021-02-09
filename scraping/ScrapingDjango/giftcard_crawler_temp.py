@@ -27,7 +27,7 @@ logger = logging.getLogger("crawler")
 
 def get_data_from_site(keyword:str, site:str, response):
     results = []
-    if site == '11st':
+    if site == '11st' or site=="timon":
         html = response.text
     else:
         html = BeautifulSoup(response.text, 'html.parser')
@@ -40,8 +40,12 @@ def get_data_from_site(keyword:str, site:str, response):
         for item_card in item_cards:
             title = item_card.select_one(".text--title").get_text()
 
-            # normal product check
-            if not normal_product_check(keyword, title, item_card.get_text()):
+            # title check
+            if title.find(keyword) < 0:
+                continue
+                    
+            # delivery check
+            if item_card.select_one(".list--addinfo").get_text().find("배송비") >= 0:
                 continue
 
             # price
@@ -60,8 +64,12 @@ def get_data_from_site(keyword:str, site:str, response):
             # title
             title = a_link.select_one(".text__item").get_text()
 
-            # normal product check
-            if not normal_product_check(keyword, title, item_card.select_one("div.box__item-arrival .text__tag").get_text()):
+            # title check
+            if title.find(keyword) < 0:
+                continue
+                    
+            # delivery check
+            if item_card.select_one("div.box__item-arrival .text__tag").get_text().find("배송비") >= 0:
                 continue
 
             # price
@@ -86,57 +94,53 @@ def get_data_from_site(keyword:str, site:str, response):
                 url = product["productDetailUrl"]
                 item_no = str(product["prdNo"])
                 
-                # normal product check
-                if not normal_product_check(keyword, title, product["deliveryPriceText"]):
+                # title check
+                if title.find(keyword) < 0:
+                    continue
+                        
+                # delivery check
+                if product["deliveryPriceText"].find("배송비") >= 0:
                     continue
 
                 results.append({"keyword": keyword, "site":site, "title": title, "price": price, "url": url, "item_no": item_no})
     elif site == 'timon':
-        item_cards = html.select("section.search_deallist .deallist_wrap li.item")
-        for item_card in item_cards:
-            a_link = item_card.select_one("a")
-            title = a_link.select_one("p.title").get_text()
-            # normal product check
-            if not normal_product_check(keyword, title, ""):
-                continue
-            if a_link.select_one("div.label_area").get_text().find("바로사용") < 0:
-                continue
+        json_data = json.loads(html)
+        if json_data["httpStatus"] == "OK" and json_data["httpCode"] == 200:
+            products = json_data["data"]["searchDeals"]
 
-            # price
-            price = a_link.select_one("div.price_area span.price i.num").get_text().replace(",", "")
-            
-            # link
-            url = a_link['href']
-            item_no = a_link['data-deal-srl']
-            
-            results.append({"keyword": keyword, "site":site, "title": title, "price": price, "url": url, "item_no": item_no})
+            for product in products:
+                title = product["searchDealResponse"]["dealInfo"]["titleName"]
+                price = product["searchDealResponse"]["dealInfo"]["priceInfo"]["price"]
+                url = product["extraDealInfo"]["detailUrl"]
+                item_no = product["searchDealResponse"]["searchInfo"]["id"]
+
+                # title check
+                if title.find(keyword) < 0:
+                    continue
+
+                # deal type check
+                if product["searchDealResponse"]["dealInfo"]["dealType"] != "PIN":
+                    continue
+                        
+                # sold out check
+                if product["searchDealResponse"]["dealInfo"]["dealMax"]["soldOut"] == "True":
+                    continue
+
+                results.append({"keyword": keyword, "site":site, "title": title, "price": price, "url": url, "item_no": item_no})
     else:
         logger.warning("Not defined site : " + site)
     
     return results
-
-def normal_product_check(keyword, title, delivery):
-    # title check
-    if title.find(keyword) < 0:
-        return False
-            
-    # delivery check
-    if delivery.find("배송비") >= 0:
-        return False
-    
-    return True
-
 
 def crawling(keyword, min_price="43000", max_price = "47000"):
     keyword_url = parse.quote(keyword, encoding='UTF-8')
     min_price = str(min_price)
     max_price = str(max_price)
     sites = {
-          'auction': ''.join(["http://browse.auction.co.kr/search?keyword=", keyword_url, "&isSuggestion=No&f=p:", min_price,"^", max_price])
-        , 'gmarket': ''.join(["https://browse.gmarket.co.kr/search?keyword=", keyword_url, "&f=p:", min_price,"^", max_price])
-        #  ,'11st': ''.join(["https://search.11st.co.kr/Search.tmall?kwd=", keyword_url, "#fromPricetoPrice%%", min_price, "%%", max_price, "%%", min_price, "%20~%20", max_price, "%%1$$pageNum%%1%%page%%2"])
-        , '11st': ''.join(["https://search.11st.co.kr/Search.tmall?method=getSearchFilterAjax&kwd=", keyword_url, "&selectedFilterYn=Y&sellerNos=&pageNo=1&fromPrice=", min_price, "&toPrice=", max_price, "&excptKwd=&pageNum=1&pageSize=80&researchFlag=false&lCtgrNo=0&mCtgrNo=0&sCtgrNo=0&dCtgrNo=0&viewType=L&minPrice=", min_price, "&maxPrice=", max_price,"&previousKwd=&previousExcptKwd=&sortCd=NP&firstInputKwd=", keyword_url, "&catalogYN=N&brandCd=&attributes=&imgAttributes=&benefits=&prdServiceTypes=&verticalType=&dispCtgrNo=&dispCtgrType=&officialCertificationSeller=&day11Yn=N&engineRequestUrl="])
-        , 'timon': ''.join(["https://search.tmon.co.kr/search/?keyword=", keyword_url, "&commonFilters=minPrice:", min_price, ",maxPrice:", max_price])
+        #   'auction': ''.join(["http://browse.auction.co.kr/search?keyword=", keyword_url, "&isSuggestion=No&f=p:", min_price,"^", max_price])
+        # , 'gmarket': ''.join(["https://browse.gmarket.co.kr/search?keyword=", keyword_url, "&f=p:", min_price,"^", max_price])
+        # , '11st': ''.join(["https://search.11st.co.kr/Search.tmall?method=getSearchFilterAjax&kwd=", keyword_url, "&selectedFilterYn=Y&sellerNos=&pageNo=1&fromPrice=", min_price, "&toPrice=", max_price, "&excptKwd=&pageNum=1&pageSize=80&researchFlag=false&lCtgrNo=0&mCtgrNo=0&sCtgrNo=0&dCtgrNo=0&viewType=L&minPrice=", min_price, "&maxPrice=", max_price,"&previousKwd=&previousExcptKwd=&sortCd=NP&firstInputKwd=", keyword_url, "&catalogYN=N&brandCd=&attributes=&imgAttributes=&benefits=&prdServiceTypes=&verticalType=&dispCtgrNo=&dispCtgrType=&officialCertificationSeller=&day11Yn=N&engineRequestUrl="])
+         'timon':''.join(["https://search.tmon.co.kr/api/search/v4/deals?keyword=", keyword_url, "&mainDealOnly=true&maxPrice=", max_price, "&minPrice=", min_price, "&optionDealOnly=false&page=1&sortType=POPULAR&useTypoCorrection=true"])
         }
     
     results = []
@@ -158,6 +162,10 @@ def crawling(keyword, min_price="43000", max_price = "47000"):
 
 def add_results_to_db(results):
     logger.info("Insert Db Start...")
+    if len(results) == 0:
+        logger.info("Insert Db No Data End...")
+        return
+    
     for giftcard_info in results:
         if not Giftcard.objects.filter(date=trsc_dt, item_no=giftcard_info["item_no"], price=giftcard_info["price"]).exists():
             Giftcard.objects.create(date = trsc_dt
@@ -172,28 +180,34 @@ def add_results_to_db(results):
     
     logger.info("Insert Db End...")
 
-def send_noti_to_telegram(items):
-    if len(items) == 0:
-        return
+# def send_noti_to_telegram(text):
+#     if len(text) == 0:
+#         return
     
-    with open('./secured/config.json') as f:
-        config = json.load(f)
-        telegram_bot_info = config["TELEGRAM_BOT_INFO"]
-    
-    for item in items:
-        bot_message = ""
-        for k, v in item.items():
-            bot_message += k + " : " + v + "\n"
+#     with open('./secured/config.json') as f:
+#         config = json.load(f)
+#         telegram_bot_info = config["TELEGRAM_BOT_INFO"]
         
-        url = 'https://api.telegram.org/bot' + telegram_bot_info["BOT_TOKEN"] + \
-              '/sendMessage?chat_id=' + telegram_bot_info["BOT_CHAT_ID"] + \
-              '&parse_mode=Markdown&text=' + bot_message
-        requests.get(url)
-        time.sleep(1)
+#     url = 'https://api.telegram.org/bot' + telegram_bot_info["BOT_TOKEN"] + \
+#             '/sendMessage?chat_id=' + telegram_bot_info["BOT_CHAT_ID"] + \
+#             '&parse_mode=Markdown&text=' + text
+#     response = requests.get(url)
+#     if response.status_code == requests.codes.ok:
+#         result = json.loads(response.text)
+#         if result["ok"]:
+#             return True
+#         else:
+#             return False
+#     else:
+#         return False
 
 def send_noti_to_telegram_by_db():
-    logger.info("send noti Start...")
+    logger.info("send telegram Start...")
     giftcards = Giftcard.objects.filter(is_send=False)
+
+    if len(giftcards) == 0:
+        logger.info("send telegram No Data End...")
+        return
     
     with open('./secured/config.json') as f:
         config = json.load(f)
@@ -221,20 +235,22 @@ def send_noti_to_telegram_by_db():
                 pass
         else:
             if response.status_code == requests.codes.ok:
-                giftcard.is_send = True
-                giftcard.save()
+                result = json.loads(response.text)
+                if result["ok"]:
+                    giftcard.is_send = True
+                    giftcard.save()
             else:
                 logger.warning("Send telegram message Fail!!! ErrorCode["+response.status_code+"]")
                 pass
 
         time.sleep(1)
     
-    logger.info("send noti End...")
+    logger.info("send telegram End...")
 
-if __name__ == '__main__':
-    logger.info('start - ' + trsc_dtm)
-    results = crawling("해피머니", "43000", "47000")
-    results = sorted(results, key=itemgetter("price"))
-    add_results_to_db(results)
+# if __name__ == '__main__':
+#     logger.info('start - ' + trsc_dtm)
+    # results = crawling("해피머니", "43000", "47000")
+    # results = sorted(results, key=itemgetter("price"))
+    # add_results_to_db(results)
     
-    send_noti_to_telegram_by_db()
+    # send_noti_to_telegram_by_db()

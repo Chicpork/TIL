@@ -13,3 +13,11 @@ class Giftcard(models.Model):
     title = models.TextField()
     price = models.IntegerField()
     url = models.URLField()
+
+class CrawlerProcess(models.Model):
+    server_pid = models.IntegerField()
+    crawler_pid = models.IntegerField()
+    created_date = models.DateTimeField(auto_now_add=True)
+    updated_date = models.DateTimeField(auto_now=True)
+    is_run = models.BooleanField()
+    args = models.TextField()

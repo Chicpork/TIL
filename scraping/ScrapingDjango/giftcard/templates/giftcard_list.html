@@ -12,7 +12,6 @@
 </head>
 
 <body>
-    Hello, World!
     <!-- DivTable.com -->
     <div class="divTable" style="border: 1px solid #000;">
         <div class="divTable paleBlueRows">
@@ -32,10 +31,10 @@
                 <div class="divTableRow">
                     <div class="divTableCell">{{giftcard.date}}</div>
                     <div class="divTableCell">{{giftcard.keyword}}</div>
-                    <div class="divTableCell">{{giftcard.site}}</div>
+                    <div class="divTableCell">{{giftcard.site|title}}</div>
                     <div class="divTableHead">{{giftcard.title}}</div>
                     <div class="divTableCell">{{giftcard.price}}</div>
-                    <div class="divTableHead">{{giftcard.url}}</div>
+                    <div class="divTableHead"><a href="{{giftcard.url}}" target="_blank">{{giftcard.url}}</a></div>
                     <div class="divTableHead">{{giftcard.created_date}} , {{giftcard.updated_date}}</div>
                 </div>
                 {% endfor %}
