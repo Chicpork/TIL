@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils import timezone
 
+# python manage.py makemigrations giftcard
+# python manage.py migrate giftcard
 
 class Giftcard(models.Model):
     date = models.CharField(max_length=8)
@@ -21,3 +23,11 @@ class CrawlerProcess(models.Model):
     updated_date = models.DateTimeField(auto_now=True)
     is_run = models.BooleanField()
     args = models.TextField()
+
+class SearchFilter(models.Model):
+    created_date = models.DateTimeField(auto_now_add=True)
+    updated_date = models.DateTimeField(auto_now=True)
+    is_run = models.BooleanField()
+    keyword = models.TextField()
+    min_price = models.IntegerField()
+    max_price = models.IntegerField()

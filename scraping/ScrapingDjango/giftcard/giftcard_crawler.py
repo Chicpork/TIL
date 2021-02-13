@@ -4,35 +4,34 @@ from bs4 import BeautifulSoup
 from urllib import parse
 import json
 import time
-from operator import itemgetter
-from django.utils import timezone
 import logging
 
 # django env setup
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', "ScrapingDjango.settings")
 import django
 django.setup()
-from giftcard.models import Giftcard
+from django.utils import timezone
+from giftcard.models import Giftcard, SearchFilter
 
 # trsc dtm
 trsc_dtm = timezone.localtime().strftime('%Y-%m-%d %H:%M:%S')
 trsc_dt = timezone.localtime().strftime('%Y%m%d')
 
 # make logger
-with open("logging.json", "r") as f:
-    config = json.load(f)
+# with open("logging.json", "r") as f:
+#     config = json.load(f)
 
-logging.config.dictConfig(config)
-logger = logging.getLogger("crawler")
+# logging.config.dictConfig(config)
+logger = logging.getLogger(__name__)
 
-class GiftcardCrawler():
-    sleep_interval = 60 # 반복 간격
-    max_tick = 2 # 최대 반복 회수
-
-    def __init__(self, sleep_interval=60, max_tick=2):
+class GiftcardCrawler:
+    def __init__(self, sleep_interval=60, max_tick=100):
+        self.sleep_interval = sleep_interval
+        self.max_tick = max_tick
         pass
 
-    def crawling(self, keyword, min_price="43000", max_price = "47000"):
+    def crawling(self, keyword, min_price= "43000", max_price = "47000"):
+        logger.info("crawling start... [" + keyword + ", " + min_price + ", " + max_price + "]")
         django.db.connections.close_all()
         tick = 0
         while True:
@@ -63,6 +62,7 @@ class GiftcardCrawler():
                         logger.warning("Error code [" + response.status_code + "]")
             
             if len(results) > 0:
+                results = sorted(results, key=lambda k: k['price'], reverse=True)
                 self.add_results_to_db(results)
                 time.sleep(0.5)
                 self.send_noti_to_telegram_by_db()
@@ -102,7 +102,7 @@ class GiftcardCrawler():
                 url = item_card.select_one(".text--itemcard_title a")['href']
                 item_no = url.split("itemno=")[1].split("?")[0]
 
-                results.append({"keyword": keyword, "site":site, "title": title, "price": price, "url": url, "item_no": item_no})
+                results.append({"keyword": keyword, "site":site, "title": title, "price": int(price), "url": url, "item_no": item_no})
         elif site == 'gmarket':
             item_cards = html.select("#section__inner-content-body-container div.box__information > div.box__information-major")
             for item_card in item_cards:
@@ -128,7 +128,7 @@ class GiftcardCrawler():
                 # item_no
                 item_no = url.split("goodscode=")[1].split("?")[0]
 
-                results.append({"keyword": keyword, "site":site, "title": title, "price": price, "url": url, "item_no": item_no})
+                results.append({"keyword": keyword, "site":site, "title": title, "price": int(price), "url": url, "item_no": item_no})
         elif site == '11st':
             json_data = json.loads(html)
             prd_lists = ["rcmdPrdList", "focusPrdList", "powerPrdList", "plusPrdList", "commonPrdList"]
@@ -149,7 +149,7 @@ class GiftcardCrawler():
                     if product["deliveryPriceText"].find("배송비") >= 0:
                         continue
 
-                    results.append({"keyword": keyword, "site":site, "title": title, "price": price, "url": url, "item_no": item_no})
+                    results.append({"keyword": keyword, "site":site, "title": title, "price": int(price), "url": url, "item_no": item_no})
         elif site == 'timon':
             json_data = json.loads(html)
             if json_data["httpStatus"] == "OK" and json_data["httpCode"] == 200:
@@ -173,7 +173,7 @@ class GiftcardCrawler():
                     if product["searchDealResponse"]["dealInfo"]["dealMax"]["soldOut"] == "True":
                         continue
 
-                    results.append({"keyword": keyword, "site":site, "title": title, "price": price, "url": url, "item_no": item_no})
+                    results.append({"keyword": keyword, "site":site, "title": title, "price": int(price), "url": url, "item_no": item_no})
         else:
             logger.warning("Not defined site : " + site)
         
@@ -199,7 +199,7 @@ class GiftcardCrawler():
                                        )
                 insert_count += 1
         
-        logger.info("Insert Db End [Count : " + insert_count + "]")
+        logger.info("Insert Db End [Count : " + str(insert_count) + "]")
 
     def send_noti_to_telegram_by_db(self):
         logger.info("send telegram Start...")
@@ -214,13 +214,12 @@ class GiftcardCrawler():
             telegram_bot_info = config["TELEGRAM_BOT_INFO"]
         
         for giftcard in giftcards:
-            bot_message = ''.join(["date : ", giftcard.date, "\n"
-                                ,"keyword : ", giftcard.keyword, "\n"
-                                ,"site : ", giftcard.site, "\n"
-                                ,"title : ", giftcard.title, "\n"
-                                ,"keyword : ", giftcard.keyword, "\n"
-                                ,"price : ", str(giftcard.price), "\n"
-                                ,"url : ", giftcard.url])
+            bot_message = ''.join(["일자 : ", giftcard.date, "\n"
+                                ,"키워드 : ", giftcard.keyword, "\n"
+                                ,"사이트 : ", giftcard.site, "\n"
+                                ,"제목 : ", giftcard.title, "\n"
+                                ,"가격 : ", str(giftcard.price), "\n"
+                                ,"URL : ", giftcard.url])
             
             bot_send_url = 'https://api.telegram.org/bot' + telegram_bot_info["BOT_TOKEN"] + \
                         '/sendMessage?chat_id=' + telegram_bot_info["BOT_CHAT_ID"] + \

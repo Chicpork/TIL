@@ -12,6 +12,13 @@
 </head>
 
 <body>
+    <form action="" method="POST">
+        {% csrf_token %}
+        <input type="text" name="keyword" placeholder="keyword"/>
+        <input type="number" name="min_price" min="0" placeholder="min price"/>
+        <input type="number" name="max_price" min="0" placeholder="max price"/>
+        <input type="submit" value="키워드 추가"/>
+    </form>
     <!-- DivTable.com -->
     <div class="divTable" style="border: 1px solid #000;">
         <div class="divTable paleBlueRows">
@@ -23,7 +30,8 @@
                     <div class="divTableHead">Title</div>
                     <div class="divTableHead">Price</div>
                     <div class="divTableHead">Url</div>
-                    <div class="divTableHead">CD, UD</div>
+                    <!-- <div class="divTableHead">Created_date</div>
+                    <div class="divTableHead">Updated_date</div> -->
                 </div>
             </div>
             <div class="divTableBody">
@@ -35,7 +43,8 @@
                     <div class="divTableHead">{{giftcard.title}}</div>
                     <div class="divTableCell">{{giftcard.price}}</div>
                     <div class="divTableHead"><a href="{{giftcard.url}}" target="_blank">{{giftcard.url}}</a></div>
-                    <div class="divTableHead">{{giftcard.created_date}} , {{giftcard.updated_date}}</div>
+                    <!-- <div class="divTableHead">{{giftcard.created_date}}</div>
+                    <div class="divTableHead">{{giftcard.updated_date}}</div> -->
                 </div>
                 {% endfor %}
             </div>

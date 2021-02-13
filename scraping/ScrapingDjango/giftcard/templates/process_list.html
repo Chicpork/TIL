@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    {% load static %}
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Process List</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' type='text/css' media='screen' href='{% static "style.css" %}'>
+    <script src='{% static "main.js" %}'></script>
+</head>
+
+<body>
+    <!-- DivTable.com -->
+    <div class="divTable" style="border: 1px solid #000;">
+        <div class="divTable paleBlueRows">
+            <div class="divTableHeading">
+                <div class="divTableRow">
+                    <div class="divTableHead">server_pid</div>
+                    <div class="divTableHead">crawler_pid</div>
+                    <div class="divTableHead">created_date</div>
+                    <div class="divTableHead">updated_date</div>
+                    <div class="divTableHead">is_run</div>
+                    <div class="divTableHead">args</div>
+                </div>
+            </div>
+            <div class="divTableBody">
+                {% for process in processes %}
+                <div class="divTableRow">
+                    <div class="divTableCell">{{process.server_pid}}</div>
+                    <div class="divTableCell">{{process.crawler_pid}}</div>
+                    <div class="divTableCell">{{process.created_date}}</div>
+                    <div class="divTableCell">{{process.updated_date}}</div>
+                    <div class="divTableCell">{{process.is_run}}</div>
+                    <div class="divTableCell">{{process.args}}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

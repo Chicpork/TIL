@@ -15,9 +15,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from giftcard.views import giftCardView
+from giftcard.views import giftCardView, ProcessView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('giftcard/', giftCardView.as_view(), name='giftcard')
+    path('giftcard/', giftCardView.as_view(), name='giftcard'),
+    path('process/', ProcessView.as_view(), name='process')
 ]

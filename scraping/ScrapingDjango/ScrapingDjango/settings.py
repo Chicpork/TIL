@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
+import logging
 from pathlib import Path
 import json
 
@@ -123,3 +124,35 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# logging
+LOGGING = {
+    "version": 1,
+    "formatters": {
+        "basic": {
+            "format": "[%(asctime)s] (%(filename)s:%(lineno)d) >>> %(name)s:%(levelname)s - %(message)s",
+            "datefmt": "%Y-%m-%d %H:%M:%S"
+        }
+    },
+
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "level": "INFO",
+            "formatter": "basic",
+            "stream": "ext://sys.stdout"
+        },
+
+        "file_handler": {
+            "class": "logging.FileHandler",
+            "level": "DEBUG",
+            "formatter": "basic",
+            "filename": "./log/info.log"
+        }
+    },
+
+    "root": {
+        "level": "INFO",
+        "handlers": ["console", "file_handler"]
+    }
+}
