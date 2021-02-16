@@ -22,10 +22,12 @@ class giftCardView(View):
     template_name = 'giftcard_list.html'
 
     def get(self, request, *args, **kwargs):
+        logger.info("giftCardView get Start...")
         giftcards = Giftcard.objects.filter(date=timezone.localtime().strftime('%Y%m%d')).order_by('price')
         return render(request, 'giftcard_list.html', {'giftcards' : giftcards})
 
     def post(self, request, *args, **kwargs):
+        logger.info("giftCardView post Start...")
         if request.META['CONTENT_TYPE'] == "application/json":
             data = json.loads(request.body)
             keyword = data['keyword']

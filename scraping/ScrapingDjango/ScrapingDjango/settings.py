@@ -154,5 +154,18 @@ LOGGING = {
     "root": {
         "level": "INFO",
         "handlers": ["console", "file_handler"]
-    }
+    },
+
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file_handler'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'giftcard': {
+            'handlers': ['console', 'file_handler'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
 }

@@ -17,10 +17,6 @@ from giftcard.models import Giftcard, SearchFilter
 trsc_dtm = timezone.localtime().strftime('%Y-%m-%d %H:%M:%S')
 trsc_dt = timezone.localtime().strftime('%Y%m%d')
 
-# make logger
-# with open("logging.json", "r") as f:
-#     config = json.load(f)
-
 # logging.config.dictConfig(config)
 logger = logging.getLogger(__name__)
 
