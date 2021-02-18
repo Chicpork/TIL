@@ -11,7 +11,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', "ScrapingDjango.settings")
 import django
 django.setup()
 from django.utils import timezone
-from giftcard.models import Giftcard, SearchFilter
+from giftcard.models import Giftcard, CrawlerProcess
 
 # trsc dtm
 trsc_dtm = timezone.localtime().strftime('%Y-%m-%d %H:%M:%S')
@@ -69,7 +69,14 @@ class GiftcardCrawler:
                 break
             
             time.sleep(self.sleep_interval)
-        
+    
+    try:
+        process = CrawlerProcess.objects.get(server_pid=os.getppid(), crawler_pid=os.getpid(), is_run=True)
+        process.is_run = False
+        process.save()
+        logger.info("process Down...")
+    except CrawlerProcess.DoesNotExist:
+        logger.info("process not Exists...")
 
     def get_data_from_site(self, keyword:str, site:str, response):
         results = []
@@ -166,7 +173,7 @@ class GiftcardCrawler:
                         continue
                             
                     # sold out check
-                    if product["searchDealResponse"]["dealInfo"]["dealMax"]["soldOut"] == "True":
+                    if product["searchDealResponse"]["dealInfo"]["dealMax"]["soldOut"] == True:
                         continue
 
                     results.append({"keyword": keyword, "site":site, "title": title, "price": int(price), "url": url, "item_no": item_no})
@@ -241,3 +248,6 @@ class GiftcardCrawler:
             time.sleep(1)
         
         logger.info("send telegram End...")
+    
+    def __del__(self):
+        logger.info("giftcard_crawler Destroyed...")
