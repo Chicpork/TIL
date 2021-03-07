@@ -23,7 +23,15 @@
     },
 
     "root": {
-        "level": "INFO",
+        "level": "WARNING",
         "handlers": ["console", "file_handler"]
+    },
+
+    "loggers": {
+        "__main__": {
+            "handlers": ["console", "file_handler"],
+            "level": "INFO",
+            "propagate": false
+        }
     }
 }
