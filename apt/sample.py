@@ -66,7 +66,7 @@ def get_result_and_save(deal_ymd, lawd_cd, num_of_rows, page_no, path):
         result_code, data, totalCount = get_apt_trsc_data(deal_ymd, lawd_cd, num_of_rows, page_no)
     
     if result_code == 1:
-        file_name =  "/"+ "_".join([lawd_cd, totalCount, str(num_of_rows), str(page_no)]) + ".xml"
+        file_name =  "/"+ "_".join([lawd_cd, str(num_of_rows), totalCount, str(page_no)]) + ".xml"
         with open(path+file_name, 'w', encoding='utf8') as f:
             f.write(data)
         return (result_code, int(totalCount))
@@ -89,7 +89,7 @@ def test2():
             deal_ymd_path.mkdir()
         
         for regcode_ncrg in regcode_ncrgs:
-            regcode_ncrg_files = [file.name for file in deal_ymd_path.glob(regcode_ncrg+"*.xml")]
+            regcode_ncrg_files = [file.name for file in deal_ymd_path.glob(regcode_ncrg+"_" + str(num_of_rows) +"_*.xml")]
             
             if len(regcode_ncrg_files) == 0:
                 logger.info("Saved Data Not Exists.. " + ",".join([deal_ymd, regcode_ncrg]))
@@ -112,12 +112,12 @@ def test2():
             else:
                 logger.info("Data Exists.. " + deal_ymd + "," + regcode_ncrg)
                 # file_infos[0]: region cd
-                # file_infos[1]: total count
-                # file_infos[2]: num rows per 1 request
+                # file_infos[1]: num rows per 1 request
+                # file_infos[2]: total count
                 # file_infos[3]: cur page_no
                 file_infos = regcode_ncrg_files[0].split(".")[0].split("_")
 
-                for page_no in range(1, math.ceil(int(file_infos[1])/int(file_infos[2]))+1):
+                for page_no in range(1, math.ceil(int(file_infos[2])/int(file_infos[1]))+1):
                     file_name = "_".join([file_infos[0], file_infos[1], file_infos[2], str(page_no)]) + ".xml"
                     if not deal_ymd_path.joinpath(file_name).exists():
                         logger.info("Data Exists Get.. " + ",".join([deal_ymd, regcode_ncrg, str(page_no)]))
