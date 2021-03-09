@@ -92,7 +92,7 @@ def test2():
             regcode_ncrg_files = [file.name for file in deal_ymd_path.glob(regcode_ncrg+"_" + str(num_of_rows) +"_*.xml")]
             
             if len(regcode_ncrg_files) == 0:
-                logger.info("Saved Data Not Exists.. " + ",".join([deal_ymd, regcode_ncrg]))
+                logger.debug("Saved Data Not Exists.. " + ",".join([deal_ymd, regcode_ncrg]))
                 cur_cnt = 1
 
                 result, tot_cnt = get_result_and_save(deal_ymd, regcode_ncrg, num_of_rows, cur_cnt, deal_ymd_path.as_posix())
@@ -110,7 +110,7 @@ def test2():
                         return
                     cur_cnt += 1
             else:
-                logger.info("Data Exists.. " + deal_ymd + "," + regcode_ncrg)
+                logger.debug("Data Exists.. " + deal_ymd + "," + regcode_ncrg)
                 # file_infos[0]: region cd
                 # file_infos[1]: num rows per 1 request
                 # file_infos[2]: total count
