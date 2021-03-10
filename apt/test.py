@@ -1,6 +1,9 @@
-def test():
-    return (1,2)
-
-a, b = test()
-print(a)
-print(b)
+class test:
+    def a(self):
+        print("a")
+    
+    def b(self):
+        print("b")
+    
+    def c(self):
+        print("c")
