@@ -193,7 +193,7 @@ def apt_collector(multi_cnt, cur_cnt):
 
 
 if __name__ == "__main__":
-    thread_num = 8
+    thread_num = 10
     t_threads = []
     for ix in range(thread_num):
         t_thread = Process(target=apt_collector, args=(thread_num, ix), name="thread_"+str(ix), daemon=True)
