@@ -32,11 +32,6 @@
             "handlers": ["console", "file_handler"],
             "level": "INFO",
             "propagate": false
-        },
-        "ray.services": {
-            "handlers": ["console", "file_handler"],
-            "level": "INFO",
-            "propagate": false
         }
     }
 }
