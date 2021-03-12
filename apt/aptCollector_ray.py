@@ -17,7 +17,7 @@ from ray.util import queue
 with open("./apt/logging.json", "r") as f:
     config = json.load(f)
 
-num_cpus = 10
+num_cpus = psutil.cpu_count(logical=False)
 ray.init(num_cpus=num_cpus)
 
 class SingletonInstance:
