@@ -69,14 +69,6 @@ class GiftcardCrawler:
                 break
             
             time.sleep(self.sleep_interval)
-    
-    try:
-        process = CrawlerProcess.objects.get(server_pid=os.getppid(), crawler_pid=os.getpid(), is_run=True)
-        process.is_run = False
-        process.save()
-        logger.info("process Down...")
-    except CrawlerProcess.DoesNotExist:
-        logger.info("process not Exists...")
 
     def get_data_from_site(self, keyword:str, site:str, response):
         results = []
@@ -248,6 +240,3 @@ class GiftcardCrawler:
             time.sleep(1)
         
         logger.info("send telegram End...")
-    
-    def __del__(self):
-        logger.info("giftcard_crawler Destroyed...")

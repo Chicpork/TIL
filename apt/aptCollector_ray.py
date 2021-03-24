@@ -130,12 +130,11 @@ class aptCollector(SingletonInstance):
         while not queue_datas.empty():
             self.__set_variables(queue_datas.get())
 
-            while self.total_cnt is None or self.page_no*self.num_of_rows < int(self.total_cnt):
+            while self.total_cnt is None or (self.page_no-1)*self.num_of_rows < int(self.total_cnt):
                 result_code, data, self.total_cnt = self.__get_apt_trsc_data(self.__get_url())
                 if result_code == 1:
                     self.__save_data(data)
                     self.page_no += 1
-                    pass
                 elif result_code == 0:
                     if not self.__remove_current_service_key():
                         raise RetryError("service keys are out of order")
@@ -155,7 +154,7 @@ class aptCollector(SingletonInstance):
                     raise ValueError("Invalid result_code [" + result_code + "]")
 
 def get_jobLists(ray_queue):
-    with open('./apt/regCode_ncrg.txt', encoding='utf8') as f:
+    with open('./apt/regCode_extracted.txt', encoding='utf8') as f:
         lawd_cds = f.read().splitlines()
 
     with open('./apt/deal_ymd.txt', encoding='utf8') as f:

@@ -192,3 +192,4 @@ temp/
 secured/
 log/
 data_t/
+*.csv
