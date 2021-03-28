@@ -23,7 +23,7 @@
     },
 
     "root": {
-        "level": "WARNING",
+        "level": "INFO",
         "handlers": ["console", "file_handler"]
     },
 
