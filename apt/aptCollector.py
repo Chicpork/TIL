@@ -122,7 +122,7 @@ class aptCollector:
         
         return (result_code, -1)
 
-def apt_collector(multi_cnt, cur_cnt):
+def main(multi_cnt, cur_cnt):
     if multi_cnt <= cur_cnt:
         raise ValueError
 
@@ -196,7 +196,7 @@ if __name__ == "__main__":
     thread_num = 10
     t_threads = []
     for ix in range(thread_num):
-        t_thread = Process(target=apt_collector, args=(thread_num, ix), name="thread_"+str(ix), daemon=True)
+        t_thread = Process(target=main, args=(thread_num, ix), name="thread_"+str(ix), daemon=True)
         t_thread.start()
         t_threads.append(t_thread)
         
