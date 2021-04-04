@@ -193,3 +193,5 @@ secured/
 log/
 data_t/
 *.csv
+cache/
+test/

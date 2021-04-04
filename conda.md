@@ -18,3 +18,6 @@ conda deactivate
 
 # 주피터노트북 conda env 추가
 python -m ipykernel install --user --name [virtualEnv] --display-name "[displayKenrelName]"
+
+# conda install site 주소 설정
+conda config --prepend channels conda-forge
