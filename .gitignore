@@ -1,4 +1,3 @@
-
 # Created by https://www.gitignore.io/api/node,webstorm
 # Edit at https://www.gitignore.io/?templates=node,webstorm
 
@@ -195,3 +194,5 @@ data_t/
 *.csv
 cache/
 test/
+EasyStock_T/
+easystock/

@@ -80,29 +80,29 @@ item_insert_sql = 'INSERT INTO OPEN_API_ITEM\n' + \
 
 info_select_sql = 'select ID FROM OPEN_API_INFO WHERE ID = %s'
 
+# %%
 num_cpus = psutil.cpu_count(logical=False)
 ray.init(num_cpus=num_cpus)
 
 # %%
-# url = 'https://www.data.go.kr/tcs/dss/selectDataSetList.do'
-# params = {
-#     'dType':'API',
-#     'currentPage':'1',
-#     'perPage':'40'
-# }
-# crawler = ApiMetaCrawler(url, params)
-# crawler.request().parse()
+url = 'https://www.data.go.kr/tcs/dss/selectDataSetList.do'
+params = {
+    'dType':'API',
+    'currentPage':'1',
+    'perPage':'40'
+}
+crawler = ApiMetaCrawler().url(url).params(params).request().parse()
 
-# total_cnt = crawler.select_one('#apiCnt').text.replace(',', '')
-# results = []
-# for page in range(1, int(total_cnt)//int(params['perPage'])+2):
-#     if page > 1:
-#         params['currentPage'] = page
-#         crawler.params = params
-#         crawler.request().parse()
+total_cnt = crawler.select_one('#apiCnt').text.replace(',', '')
+results = []
+for page in range(1, int(total_cnt)//int(params['perPage'])+2):
+    if page > 1:
+        params['currentPage'] = page
+        crawler.params = params
+        crawler.request().parse()
 
-#     for title in crawler.select('div.result-list span.title'):
-#         results.append((title.text.strip(), title.parent['href']))
+    for title in crawler.select('div.result-list span.title'):
+        results.append((title.text.strip(), title.parent['href']))
 
 # %%
 # with open('C:/develop/TIL/apt/url.txt', 'r', encoding='utf-8') as f:

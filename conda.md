@@ -1,6 +1,9 @@
 # conda 설치 리스트 출력
 conda list
 
+# conda 가능 패키지 목록 출력
+conda search PACKAGE
+
 # conda 가상환경 리스트 출력(현재 활성화된 가상환경 앞에는 *가 붙음)
 conda env list
 
@@ -19,5 +22,10 @@ conda deactivate
 # 주피터노트북 conda env 추가
 python -m ipykernel install --user --name [virtualEnv] --display-name "[displayKenrelName]"
 
-# conda install site 주소 설정
+# conda channels 주소 설정
 conda config --prepend channels conda-forge
+conda config --append channels conda-forge
+conda config --remove channels conda-forge
+
+# conda channels 순서 확인
+conda config --show channels
