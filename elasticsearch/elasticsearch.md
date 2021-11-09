@@ -13,73 +13,87 @@ node.roles: ["master", "data"]
   - 이 설정이 같은 node가 실행되면 동일 클러스터로 구성된다.
 - `node.name`
   - 노드의 용도와 목적을 이해 하기 위한 사람이 읽을 수 있는 식별자로 작성하면 좋다.
-- Cluster 환경 구동시 참고 설정
-  - `discovery.type`
-    - cluster.initial_master_nodes와 함께 사용 불가
-    - 이 설정이 등록되어 있으면 singel-node라는 값으로 지정이 되고 단일 노드 구성이 이루어짐
-  - `discovery.seed_hosts`
-    - Clustering을 위한 노드 목록 작성
-  - `cluster.initial_master_nodes`
-    - master 역할을 가진 노드 목록 작성
-    - master 구성은 최소 3개 이상의 쿼럼 구성을 추천
-- Heap 설정
-  - elasticsearch는 jvm위에서 동작하므로 실행 시 Heap 설정.
-  - 이 경우, 시스템 메모리를 전용으로 안정적으로 사용하기 위해 아래와 같은 설정 사용추천
-  - `bootstrap.memory_locak:true`
-    - Elasticsearch 는 HTTP 통신과 Transport 통신 둘 다 지원
-    - 노드간 통신은 transport로 이루어지며, 통신을 위한 port 설정과 content 전송에 따른 compression 설정 등이 가능함
-  - `http.port`
-    - 기본 9200 포트로 선언 되며, 지정시 해당값으로 할당
-  - `http.max_content_length`
-    - RESTful API 요청 시 실제 저장된 문서의 크기가 클 경우, 100MB (HTTP Request Body Size)를 넘어가는 경우 -> 크기를 적당히 조절
-    - 주의) 네트워크의 bandwidth를 많이 사용하지 않기(네트워크 병목으로 성능 저하)
-- HTTP 통신 설정
-  - `http.max_initial_line_length`
-    - HTTP URL 의 최대 크기 4KB
-  - `http.max_header_size`
-    - 허용하는 최대 Header 크기 (8KB)
-  - `http.compression`
-    - 압축전송 설정.
-    - 기본 false 이나 true 로 설정 추천
-    - B2C 형 서비스인 경우 API gateway를 별도로 두기 때문에 true로 설정해서 network 병목을 최소화 할 수 있음.
-  - `http.compression_level`
-    - 기본 3 설정, CPU 자원에 대한 소비가 많을수 있기 때문에 그대로 사용 권장(1 ~ 9)
-  - `http.cors.enabled`
-    - 기본 false로 설정
-    - 이 설정을 통해서 Elasticsearch로의 요청에 대한 origin 점검 가능
-    - true로 설정시 허용할 origin을 등록
-  - `http.cors.allow-origin`
-    - 요청에 대해 허용할 origin 등록(정규표현식 가능)
-    - 요청 시 header에 origin 정보를 담아서 요청해야함.
-- Transport 통신 설정
-  - `transport.port`
-    - 노드간 통신에 사용되는 포트.
-    - 기본 9300
-  - `transport.comporess`
-    - 기본 false이며, local 통신이 기본이라 false로 설정해서 사용하는 것을 추천
-- discovery 설정
-  - 클러스터 구성 시, 각 노드를 발견하고 합류시키기 위한 설정
-  - `gateway.expected_data_nodes`
-    - 최소 실행 된 data node의 개수를 지정하기 위해 사용함
-    - 클러스터가 재시작 될 때 in-service 전에 확인하기 위해 활용
-    - 기본 값은 0이지만 in-service를 위해 최소 실행 된 data node의 수를 지정하여 사용
-  - `gateway.recover_after_data_nodes`
-    - recovery를 data node가 몇개나 올라온 이후 실행될지 결정하는 값
-    - 클러스터가 재시작될 때 활용
-    - 재시작 시 문제점 : 모든 master, data 노드가 클러스터에 join 되면서 동시에 recovery 작업을 수행 하게 되면 리소스를 많이 사용하게 되면서 hang이 걸릴 수도 있음.
-    - 최소 규모의 데이터 노드가 실행 된 후에 recovery를 수행하도록 명시적으로 선언할것
-- index 관련 설정
-  - `action.auto_create_index`
-    - 인덱스를 자동으로 설정해주는 옵션(기본 true)
-    - 불필요한 index의 생성을 방지하고 싶다면 false로 설정
-  - `action.destructive_requires_name`
-    - 기본 false이기 때문에 누구나 생성된 index 삭제 가능
-    - wildcard(*)로 삭제 요청시 전체 index가 삭제될수 있음.
-    - 명시적으로 인덱스 이름으로 삭제 요청을 하도록 하고 싶다면, 이 설정을 확인하고 true로 설정
-- xpack 관련 설정
-  - `xpack.monitoring.collection.enabled`
-    - 기본 false로 설정,
-    - elasticsearch에 대한 모니터링을 하고자 한다면 true로 설정
+
+### Cluster 환경 구동시 참고 설정
+
+- `discovery.type`
+  - cluster.initial_master_nodes와 함께 사용 불가
+  - 이 설정이 등록되어 있으면 singel-node라는 값으로 지정이 되고 단일 노드 구성이 이루어짐
+- `discovery.seed_hosts`
+  - Clustering을 위한 노드 목록 작성
+- `cluster.initial_master_nodes`
+  - master 역할을 가진 노드 목록 작성
+  - master 구성은 최소 3개 이상의 쿼럼 구성을 추천
+
+### Heap 설정
+
+- elasticsearch는 jvm위에서 동작하므로 실행 시 Heap 설정.
+- 이 경우, 시스템 메모리를 전용으로 안정적으로 사용하기 위해 아래와 같은 설정 사용추천
+- `bootstrap.memory_locak:true`
+  - Elasticsearch 는 HTTP 통신과 Transport 통신 둘 다 지원
+  - 노드간 통신은 transport로 이루어지며, 통신을 위한 port 설정과 content 전송에 따른 compression 설정 등이 가능함
+- `http.port`
+  - 기본 9200 포트로 선언 되며, 지정시 해당값으로 할당
+- `http.max_content_length`
+  - RESTful API 요청 시 실제 저장된 문서의 크기가 클 경우, 100MB (HTTP Request Body Size)를 넘어가는 경우 -> 크기를 적당히 조절
+  - 주의) 네트워크의 bandwidth를 많이 사용하지 않기(네트워크 병목으로 성능 저하)
+
+### HTTP 통신 설정
+
+- `http.max_initial_line_length`
+  - HTTP URL 의 최대 크기 4KB
+- `http.max_header_size`
+  - 허용하는 최대 Header 크기 (8KB)
+- `http.compression`
+  - 압축전송 설정.
+  - 기본 false 이나 true 로 설정 추천
+  - B2C 형 서비스인 경우 API gateway를 별도로 두기 때문에 true로 설정해서 network 병목을 최소화 할 수 있음.
+- `http.compression_level`
+  - 기본 3 설정, CPU 자원에 대한 소비가 많을수 있기 때문에 그대로 사용 권장(1 ~ 9)
+- `http.cors.enabled`
+  - 기본 false로 설정
+  - 이 설정을 통해서 Elasticsearch로의 요청에 대한 origin 점검 가능
+  - true로 설정시 허용할 origin을 등록
+- `http.cors.allow-origin`
+  - 요청에 대해 허용할 origin 등록(정규표현식 가능)
+  - 요청 시 header에 origin 정보를 담아서 요청해야함.
+ 
+### Transport 통신 설정
+
+- `transport.port`
+  - 노드간 통신에 사용되는 포트.
+  - 기본 9300
+- `transport.comporess`
+  - 기본 false이며, local 통신이 기본이라 false로 설정해서 사용하는 것을 추천
+
+### discovery 설정
+
+- 클러스터 구성 시, 각 노드를 발견하고 합류시키기 위한 설정
+- `gateway.expected_data_nodes`
+  - 최소 실행 된 data node의 개수를 지정하기 위해 사용함
+  - 클러스터가 재시작 될 때 in-service 전에 확인하기 위해 활용
+  - 기본 값은 0이지만 in-service를 위해 최소 실행 된 data node의 수를 지정하여 사용
+- `gateway.recover_after_data_nodes`
+  - recovery를 data node가 몇개나 올라온 이후 실행될지 결정하는 값
+  - 클러스터가 재시작될 때 활용
+  - 재시작 시 문제점 : 모든 master, data 노드가 클러스터에 join 되면서 동시에 recovery 작업을 수행 하게 되면 리소스를 많이 사용하게 되면서 hang이 걸릴 수도 있음.
+  - 최소 규모의 데이터 노드가 실행 된 후에 recovery를 수행하도록 명시적으로 선언할것
+
+### index 관련 설정
+
+- `action.auto_create_index`
+  - 인덱스를 자동으로 설정해주는 옵션(기본 true)
+  - 불필요한 index의 생성을 방지하고 싶다면 false로 설정
+- `action.destructive_requires_name`
+  - 기본 false이기 때문에 누구나 생성된 index 삭제 가능
+  - wildcard(*)로 삭제 요청시 전체 index가 삭제될수 있음.
+  - 명시적으로 인덱스 이름으로 삭제 요청을 하도록 하고 싶다면, 이 설정을 확인하고 true로 설정
+
+### xpack 관련 설정
+
+- `xpack.monitoring.collection.enabled`
+  - 기본 false로 설정,
+  - elasticsearch에 대한 모니터링을 하고자 한다면 true로 설정
 
 ---
 
@@ -254,8 +268,9 @@ node.roles: ["master", "data"]
 
 ### Circuit Breaker Settings (NodeScope)
 
-- OutOfMemory 에러가 발생 하지 않도록 안정장치를 걸어 두는 것
-- 검증된 설정값이 기본적으로 구성되어 있지만, 문제 발생시 설정 튜닝 필요
+OutOfMemory 에러가 발생 하지 않도록 안정장치를 걸어 두는 것.
+검증된 설정값이 기본적으로 구성되어 있지만, 문제 발생시 설정 튜닝 필요
+
 - **Parent circuit breaker**
   - 전체 heap size에 대한 total limit
   - `indices.breaker.total.use_real_memory(s)`
@@ -271,7 +286,7 @@ node.roles: ["master", "data"]
   - `indices.breaker.request.limit` : 기본 JVM Heap 크기의 60%로 설정
   - `indices.breaker.total.limit` : 기본 값 1
 
-## Cluster-level shard allocation and routing settings
+### Cluster-level shard allocation and routing settings
 
 - shard를 노드에 어떻게 할당할 것인지에 대해 정의하는 설정
 - recovery, replica allocation, rebalancing 등이 클러스터 내 노드가 추가/삭제 될 때 발생
@@ -364,7 +379,7 @@ node.roles: ["master", "data"]
 
         위처럼 정의한 2개의 elasticsearch node(hot, cold tier)를 실행한 상태에서 아래처럼 request하여 shard에 대한 배치를 변경진행.
 
-        ```json
+        ```text
         PUT "http://localhost:9200/shard-allocation-00001"
         {
           "settings" : {
@@ -377,7 +392,7 @@ node.roles: ["master", "data"]
 
         위 PUT request시 shard 추가 완료됨. 관련 내용 조회하려면 "http://localhost:9200/_cat/shards/shard-allocation-00001?v" 에서 확인가능.
 
-        ```json
+        ```text
         PUT "http://localhost:9200/shard-allocation-00001/_settings"
         {
           "index.routing.allocation.require.tier": "cold"
@@ -388,12 +403,12 @@ node.roles: ["master", "data"]
 
   4. Cluster-level shard allocation filtering
 
-## Index Recovery Settings
+### Index Recovery Settings
 
 - 이 설정은 샤드를 다시 생성하거나 재할당할 경우 primary shard 를 기준으로 복구하며, 개별 노드로의 in/out bound 크기의 총량으로 설정
 - `indices.recovery.max_bytes_per_sec` : 기본 크기 40 MB/s
 
-## Indexing buffer settings
+### Indexing buffer settings
 
 - 이 설정은 색인 요청 문서를 in-memory로 담아서 빠르게 처리 하기 위해 사용
 - memory buffer에 꽉 차면 segment 파일로 내려 씀
@@ -401,18 +416,18 @@ node.roles: ["master", "data"]
 - 대부분의 색인 성능은 Disk I/O 영향을 많이 받음
 - `indices.memory.index_buffer_size` : 기본 크기는 노드에 할당된 heap size의 10%이며 모든 샤드에서 buffer를 공유해서 사용
 
-## Node query cache settings
+### Node query cache settings
 
 - 질의 시 filter context를 이용해서 질의 결과를 cache 하도록 하는 설정
 - 노드당 하나씩 존재하며, LRU 정책으로 사용
 - cache 설정은 세그먼트 당 10000개의 문서 또는 heap size의 10%를 사용
-- 세그먼크가 merge 되면 캐시된 결과가 유효하지 않음.
+- 세그먼트가 merge 되면 캐시된 결과가 유효하지 않음.
 - Elasticsearch에서는 Field data cache도 제공
 - fielddata circuit breaker 설정 영향을 받음
 - 기본 field data cache 크기 설정은 무제한
 - `indices.queries.cache.size` : 기본 head size의 10%
 
-## Search settings
+### Search settings
 
 - 검색에 대한 전역 설정과 aggregation에 대한 제한을 구성하는 설정
 - `indices.query.bool.max_clause_count`
@@ -422,8 +437,977 @@ node.roles: ["master", "data"]
 - `search.max_buckets` : 단일 응답에 허용되는 최대 aggregation bucket의 수(기본 65535개)
 - `indices.query.bool.max_nested_depth` : bool query에서 사용되는 최대 nested 깊이를 정의(기본 20)
 
-## Thread pools
+### Thread pools
 
 - 기본 설정 수정하지 않으나, 단일 instance의 사양이 너무 좋아 elasticsearch를 여러개 실행시킬경우 processor의 크기를 나눠서 설정하는것을 추천
 - `thread_pool.*`
 - `node.processors`
+
+### Index Modules
+
+개별 인덱스에 적용되는 설정
+
+1. static 설정 : 인덱스가 생성되는 시점에 적용
+2. dynamic 설정 : 동작중인 인덱스에 update index settings를 통해서 적용
+
+**Closed index에 설정 변경을 하는 것은 예기치 않은 결과를 유발 할수 있기 때문에 사용하지 않는것을 추천.**
+
+### Static index settings
+
+`index.number_of_shards`
+
+- 인덱스의 primary shard에 대한 크기 설정
+- 기본 1로 설정 되어 있으며 인덱스 생성 시점에만 적용이 가능
+- primary shard는 색인 성능에 영향을 주는 요소로, 크기 설정시 색인에 대한 성능 검토 필수
+- 인덱스당 생성 가능한 최대 primary shard의 크기는 1024
+- 너무 많은 shard의 생성으로 자원을 낭비하게 되면 OOM과 같은 오류 발생 가능
+- 오류 방지를 위해 클러스터 내 모든 노드에 아래와 같은 설정을 통해서 제한 할수 있음.
+  - `ES_JAVA_OPTS="-Des.index.max_number_of_shards=128")`
+
+`index.number_of_ruoting_shards`
+
+- 인덱스 생성시 정의한 primary shard를 설정한 크기 만큼 늘리는 설정
+- 문서가 shard에 분산 저장되는 즉, routing에 영향을 주기 때문에 이미 데이터를 가지고 있거나 색인 중인 인덱스에 적용하는 것은 추천하지 않음.
+
+`index.codec`
+
+- 저장 데이터에 대한 압축 옵션을 지정하는 설정
+- 기본 값은 LZ4
+- 좀 더 좋은 압축 비율로 설정하고 싶다면 DEFLATE로 설정
+  - 저장 성능은 떨어지게 되지만, Disk usage에 대한 utilization은 개선될수 있음.
+
+`index.hidden`
+
+- elasticsearch에서 system 인덱스나 meta 정보를 저장하기 위한 인덱스로 주로 하는 설정
+- 기본 False
+- True 설정시 wildcard를 이용시 해당 index는 매칭되지 않으며, 정확한 index명으로 질의시 매칭
+
+### Dynamic index settings
+
+`index.number_of_replicas`
+
+- primary shard에 대한 복제 shard의 크기를 설정(기본값 1)
+- replica shard는 검색 질의 성능에 영향을 주는 요소이며, 운영 중 복제 샤드의 크기를 동적으로 조정 가능
+- 운영 중 조정을 할 경우 트래픽이 적은 시간에 진행 하는 것을 추천하며, 늘리거나 줄일 경우 실제 물리적인 복사를 하거나 삭제가 되기 때문에 서비스 영향도 점검 필요
+  - 디스크 I/O, Network 사용량 등
+
+`index.refresh_interval`
+
+- 색인 시 변경 사항을 검색에 표시하기 위한 작업 주기를 시간으로 설정
+- 기본 값은 1초 이며, -1로 설정시 해당 기능은 disable
+  - disable은 bulk 색인 요청 작업을 수행할때 주로 설정하게 됨
+- index에 해당하는 meta 정보 즉, mapping,field에 대한 정보 변경 금지(변경되면 자동으로 refresh operation이 발생 -> 의미가 없어짐)
+- refresh 가 실행되게 되면 신규 segment file이 생성 되면서 가장 최근까지 색인 작업이 수행 되던 segment info 정보를 업데이트
+- 최근 색인 데이터에 대한 IndexWriter에서 IndexReader를 가져 오고 이 Reader를 IndexSearcher로 전달하여 최근 색인 작업된 문서를 조회
+
+`index.max_result_window`
+
+- 인덱스 별 검색 질의에 대한 최대 결과 크기를 설정
+- from + size의 최대 값으로 기본은 10000
+  - from : offset 정보
+  - size : return 크기
+- 이 설정 값을 크게 잡을 경우 Heap usage가 증가하게 되어 OOM과 같은 오류 발생 가능
+- Deep pagination은 검색 성능이 떨어지는 원인이기도 함
+- 참고) Elasticsearch에서 검색을 실행하는 방법(단계)
+  1. 모든 shard로 질의 요청이 전달되고 매칭된 document id가 리턴
+  2. from, size에 맞는 결과를 정렬
+  3. 해당 document id 로 2차 document value를 요청
+  4. 결과 return
+
+#### 참고) scroll, search_after 기능
+
+##### Scroll 기능
+
+- slice : 하나의 요청을 slice 수만큼 나눠서 요청하는 것. 모든 slice 요청의 결과를 합치면 하나의 scroll 요청의 결과와 동일함.
+- scroll : RDBMS에서 cursor와 유사한 기능
+  - scroll 이 빠르게 데이터를 fetch 가능한 것은 기본적으로 index order로 sort가 되어 있기 때문
+  - Sort : Score sort와 Field sort 두 가지 방식 존재
+    - field sort 사용시 default가 _doc로 정렬
+
+``` curl
+// 요청
+POST /kibana_sample_data_logs/_search?scroll=10m
+{
+  "size": 2000,
+  "query": {
+    "match_all": {
+    }
+  }
+}
+
+// 결과
+{
+  "_scroll_id" : "FGluY2x1ZGVfY29udGV4dF91dWlkDXF1ZXJ5QW5kRmV0Y2gBFjFDRGZiNDFTU0p1WjVoSTlDSXFNRlEAAAAAAAACZBZTSUtrTnFVZVNXLVY4dUpoTE9OaExB",
+  "took" : 6,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 1,
+    "successful" : 1,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  ...
+}
+```
+
+위 요청 결과의 "_scroll_id"를 기준으로 아래처럼 테스트 진행하여 scroll 기능 테스트
+
+``` curl
+// 요청
+POST /_search/scroll
+{
+  "scroll" : "10m",
+  "scroll_id": "FGluY2x1ZGVfY29udGV4dF91dWlkDXF1ZXJ5QW5kRmV0Y2gBFjFDRGZiNDFTU0p1WjVoSTlDSXFNRlEAAAAAAAADkRZTSUtrTnFVZVNXLVY4dUpoTE9OaExB"
+}
+```
+
+``` curl
+// 전체 결과 14074개
+// 1,2,3,4,5,6,7번째 결과
+{
+  "_scroll_id" : "FGluY2x1ZGVfY29udGV4dF91dWlkDXF1ZXJ5QW5kRmV0Y2gBFjFDRGZiNDFTU0p1WjVoSTlDSXFNRlEAAAAAAAADkRZTSUtrTnFVZVNXLVY4dUpoTE9OaExB",
+  ...(생략)
+  "hits" : {
+    "total" : {
+      "value" : 14074,
+      "relation" : "eq"
+    },
+    "max_score" : 1.0,
+    "hits" : [
+      ...(생략, 2천개)
+    ]
+  }
+}
+
+// 8번째 결과(결과 74개)
+{
+  "_scroll_id" : "FGluY2x1ZGVfY29udGV4dF91dWlkDXF1ZXJ5QW5kRmV0Y2gBFjFDRGZiNDFTU0p1WjVoSTlDSXFNRlEAAAAAAAADkRZTSUtrTnFVZVNXLVY4dUpoTE9OaExB",
+  ...(생략)
+  "hits" : {
+    "total" : {
+      "value" : 14074,
+      "relation" : "eq"
+    },
+    "max_score" : 1.0,
+    "hits" : [
+      ...(생략, 74개)
+    ]
+  }
+}
+
+// 9번째 결과(결과 없음)
+{
+  "_scroll_id" : "FGluY2x1ZGVfY29udGV4dF91dWlkDXF1ZXJ5QW5kRmV0Y2gBFjFDRGZiNDFTU0p1WjVoSTlDSXFNRlEAAAAAAAADkRZTSUtrTnFVZVNXLVY4dUpoTE9OaExB",
+  ...(생략)
+  "hits" : {
+    "total" : {
+      "value" : 14074,
+      "relation" : "eq"
+    },
+    "max_score" : 1.0,
+    "hits" : [ ]
+  }
+}
+```
+
+##### Search After 기능
+
+- from을 사용하지 못하고 현재 페이지의 마지막 문서의 _doc값을 이용해서 결과 도출
+- from 과 같은 offset 지정이 아닌 이전, 다음과 같은 기능구현에서 사용 추천
+- scroll과 같이 현재의 상태를 저장하지 않기 때문에 변경된 정보에 대해서도 결과 반영
+
+`index.max_inner_result_window`
+
+- nested document에 대한 inner hit 크기에 대한 제한(기본 100개)
+- Heap 사용을 많이 하기 때문에 제한되어 있음.
+
+`index.analyze.max_token_count`
+
+- 단일 field에 대한 token 추출 시 최대 추출 크기를 제한(기본 10000개)
+
+`index.max_terms_count`
+
+- index에 질의 시 terms query에서 사용하는 최대 term 크기를 제한(기본 65536개)
+
+`index.routing.allocation.enable`
+
+- index의 shard에 대한 allocation 여부를 설정
+- all, primaries, new_primaries, none
+
+`index.routing.rebalance.enable`
+
+- index의 shard에 대한 rebalance 여부를 설정
+- 해당 인덱스에 대한 샤드가 특정 노드에 배정되어 있을때 해당 노드의 disk usage가 높을 때 다른 노드로 배정할때 어떤 샤드들만 할것인지 설정하는 값
+- all, primaries, replicas, none
+
+## Analysis
+
+구조화 되지 않은 텍스트를 검색에 최적화 된 구조의 형식으로 변환 하는 과정
+
+### Text Analysis
+
+full text 검색을 수행하게 되며, Exact matching이 아니기 때문에 관련된 모든 결과를 반환
+
+#### Full text 검색 수행을 위한 분석 과정
+
+- Tokenization : 텍스트를 토큰이라는 작은 단위로 분할 하는 것 -> 분할 된 토큰은 개별 단어를 의미
+  - 여기까지만 진행하면 문자 그대로 매칭하게 됨.
+  - 토큰을 Normalization을 통해 정규화시켜 검색수행하게 됨.
+- Normalization : 문자에 대한 변형과 필터를 적용하는 것(토큰을 표준형식으로 정규화)
+  - 대소문자 적용 / 동의어 처리 / 불용어 제거 등
+
+### Analyzer
+
+Text를 검색엔진에서 검색 가능한 구조화된 형식으로 만들어주는 것.
+Analyzer는 하나의 Tokenizer와 다수의 Filter로 구성하고, Filter 사용을 하지 않더라도 Tokenizer는 무조건 선언 되어야 함.
+
+#### Analyzer의 구성 항목
+
+1. Character filters
+   - Input text를 먼저 불필요한 텍스트를 날려주기 위한 과정
+   - 원본 텍스트에서 불필요한 문자들을 제거 / 추가 / 변동 등 원본 텍스트를 변형해서 Tokenizer로 전달 하여 token 추출되도록 함
+2. tokenizers
+   - 필터된 텍스트를 토큰 단위로 만들어 주는 것
+   - 문자 스트림을 수신 해서 개별 토큰으로 나누고, 나눠진 토큰 스트림을 출력.
+   - 나눠진 토큰의 순서, position, 단어의 시작과 끝의 문자 offset 정보를 기록
+   - 기록된 정보는 term vector 정보로 사용
+3. Token Filters
+   - 토큰 단위로 필터링 해주는 것.
+   - Tokenizer에서 넘겨 준 토큰 스트림을 받아서 토큰을 제거 / 추가 / 변경
+   - 토큰을 소문자로 변환, 불용어 제거, 동의어 추가 등의 작업 수행
+   - 선언된 순서대로 적요외기 때문에 순서 중요.
+     - 예) 대소문자 구분을 한 이후 Lower case를 구분하게 되면 의미가 없음.
+   - 0개 이상 사용 가능
+
+#### Analyzer의 종류
+
+1. Lucene에서 제공하는 내장 analyzer
+2. 사용자가 만들어서 제공하는 custom analyzer
+
+### _analyze API 구조
+
+아래 4가지의 방식이 존재
+
+``` text
+1. GET /_analyze
+2. POST /_analyze
+3. GET /<index>/_analyze
+4. POST /<index>/_analyze
+```
+
+이때 body 부분의 Json structure는 아래처럼 구성되어 있다.
+
+``` json
+{
+  "analyzer": "",
+  "char_filter": [""],
+  "tokenizer": {...},
+  "filter": [{...}],
+  "field": "",
+  "normalizer": "",
+  "text": ["..."],
+  "explain": true
+}
+```
+
+- analyzer : built-in analyzer 설정
+- char_filter : tokenizer로 전달 하기 이전에 입력 된 text를 전처리 하기 위한 filter를 설정(array)
+- explain : 기본 false이며, 분석 결과에 대한 상세 정보를 포함하도록 함
+- field : field에 정의 된 analyzer를 이용해서 분석하도록 함.
+- filter : tokenizer 이후에 사용할 filter 설정(array)
+- normalizer
+  - analyzer와 유사하지만, 단일 토큰으로 분석 결과를 만들어 낸다는 차이점이 있음.
+  - tokenizer를 사용하지 않음
+  - 모든 filter 적용이 가능한것이 아닌 문자 단위로 동작하는 필터만 사용 가능
+  - 결과적으로 특정 맵핑 정보, 특정 필드의 키워드 타입에 사용할수 있음. 키워드 타입에서 선언할수 있다.
+- text : 형태소 분석할 대상 text (array of string)
+- tokenzier : 사용할 tokenizer
+
+예제)
+
+``` curl
+GET /_analyze
+{
+  "analyzer": "standard",
+  "text": "Quick Brown Foxes!"
+}
+
+// 결과값
+{
+  "tokens" : [
+    {
+      "token" : "quick",
+      "start_offset" : 0,
+      "end_offset" : 5,
+      "type" : "<ALPHANUM>",
+      "position" : 0
+    },
+    {
+      "token" : "brown",
+      "start_offset" : 6,
+      "end_offset" : 11,
+      "type" : "<ALPHANUM>",
+      "position" : 1
+    },
+    {
+      "token" : "foxes",
+      "start_offset" : 12,
+      "end_offset" : 17,
+      "type" : "<ALPHANUM>",
+      "position" : 2
+    }
+  ]
+}
+```
+
+### _analyze API를 이용한 Nori Analyzer 테스트
+
+analyzer : 한국어 형태소 분석기(은전한닢 또는 MeCab)
+기본 사전 목록은 세종 말뭉치를 사용
+
+#### 참고 URL
+
+- [mecab-ko-dic](https://bitbucket.org/eunjeon/mecab-ko-dic/src/master/) : 오픈 소스 형태소 분석 엔진인 MeCab을 사용하여, 한국어 형태소 분석을 하기 위한 프로젝트
+- [~~삭제된 사이트~~](https://ithub.korean.go.kr/user/main.do)
+
+#### 설치 및 제거
+
+```bash
+bin/elasticsearch-plugin install analysis-nori
+bin/elasticsearch-plugin remove analysis-nori
+```
+
+#### nori_tokenizer 에서 제공하는 옵션
+
+1. decompound_mode
+   - 복합 토큰에 대한 처리 방법을 설정
+   - `none` :  처리하지 않음
+     - 가거도항, 가곡역
+   - `discard` : 복합 토큰을 분해 하고 분석 대상 토큰을 버림
+     - 예) 가곡역 -> 가곡, 역
+     - 위의 예시에서 가곡역 원본은 버려짐
+   - `mixed` : 분석 대상 토큰을 유지하면서 복합 토큰을 분해
+     - 가곡역 -> 가곡역, 가곡, 역
+2. discard_punctuation
+   - 기본 true이며, punctuation character(문장 부호)를 제거
+3. user_dictionary
+   - 사용자 정의 사전 파일을 설정
+   - 기본 위치는 `$ES_HOME/config/userdict_ko.txt`와 같이 위치 시키며, 사전 파일에 사전은 한 줄에 하나씩 정의
+   - 정의하는 사전은 simple noun, compound noun 을 작성
+4. user_dictionary_rules
+   - 사전 파일에 작성하는 내용을 설정으로 직접 등록 하는 방식
+   - 한 줄로 작성 하는 내용을 배열로 작성
+
+#### nori_part_of_speech token filter
+
+품사 태그 집합과 일치 하는 토큰을 제거
+[Enum POS.Tag](https://lucene.apache.org/core/8_8_0/analyzers-nori/org/apache/lucene/analysis/ko/POS.Tag.html) : 이 링크를 통해 Enum constants값을 확인 가능
+
+##### stoptags
+
+제거 해야 하는 품사 태그를 설정하는 부분
+
+```text
+// 기본 설정값
+"stoptags":[
+  "E",
+  "IC",
+  "J",
+  "MAG", "MAJ", "MM",
+  "SP", "SSC", "SSO", "SC", "SE",
+  "XPN", "XSA", "XSN", "XSV",
+  "UNA", "NA", "VSV"
+]
+```
+
+#### nori_readingform token filter
+
+한자를 한글로 변환합니다.
+
+#### nori_number token filter
+
+한국어 숫자를 half-width 문자의 일반 아랍어 십진수로 정규화 한다.
+이 필터는 숫자 정보에 해당 하는 field에 사용하면 좋다.
+
+#### 예제 소스(discard_punctuation: false 인 경우)
+
+```text
+// 요청 (discard_punctuation: false 인 경우)
+GET /_analyze
+{
+  "tokenizer": {
+    "type": "nori_tokenizer",
+    "decompound_mode": "mixed",
+    "discard_punctuation": "false"
+  },
+  "text": "fastcampus 에서 elasticsearch? 수업을 들었습니다.",
+  "explain": false
+}
+
+// 결과
+{
+  "tokens" : [
+    {
+      "token" : "fastcampus",
+      "start_offset" : 0,
+      "end_offset" : 10,
+      "type" : "word",
+      "position" : 0
+    },
+    {
+      "token" : " ",
+      "start_offset" : 10,
+      "end_offset" : 11,
+      "type" : "word",
+      "position" : 1
+    },
+    {
+      "token" : "에서",
+      "start_offset" : 11,
+      "end_offset" : 13,
+      "type" : "word",
+      "position" : 2
+    },
+    {
+      "token" : " ",
+      "start_offset" : 13,
+      "end_offset" : 14,
+      "type" : "word",
+      "position" : 3
+    },
+    {
+      "token" : "elasticsearch",
+      "start_offset" : 14,
+      "end_offset" : 27,
+      "type" : "word",
+      "position" : 4
+    },
+    {
+      "token" : "?",
+      "start_offset" : 27,
+      "end_offset" : 28,
+      "type" : "word",
+      "position" : 5
+    },
+    {
+      "token" : " ",
+      "start_offset" : 28,
+      "end_offset" : 29,
+      "type" : "word",
+      "position" : 6
+    },
+    {
+      "token" : "수업",
+      "start_offset" : 29,
+      "end_offset" : 31,
+      "type" : "word",
+      "position" : 7
+    },
+    ... (생략)
+    {
+      "token" : "습니다",
+      "start_offset" : 35,
+      "end_offset" : 38,
+      "type" : "word",
+      "position" : 12
+    },
+    {
+      "token" : ".",
+      "start_offset" : 38,
+      "end_offset" : 39,
+      "type" : "word",
+      "position" : 13
+    }
+  ]
+}
+```
+
+위 요청과 결과를 보면 `discard_punctuation` 옵션이 false로 되어 있어서 마침표나 물음표들이 토큰으로 나오게 되었다.
+
+#### 예제 소스(discard_punctuation: true 인 경우)
+
+```text
+// 요청 (discard_punctuation: true 인 경우)
+GET /_analyze
+{
+  "tokenizer": {
+    "type": "nori_tokenizer",
+    "decompound_mode": "mixed",
+    "discard_punctuation": "true"
+  },
+  "text": "fastcampus 에서 elasticsearch? 수업을 들었습니다.",
+  "explain": false
+}
+
+// 결과
+{
+  "tokens" : [
+    {
+      "token" : "fastcampus",
+      "start_offset" : 0,
+      "end_offset" : 10,
+      "type" : "word",
+      "position" : 0
+    },
+    {
+      "token" : "에서",
+      "start_offset" : 11,
+      "end_offset" : 13,
+      "type" : "word",
+      "position" : 1
+    },
+    {
+      "token" : "elasticsearch",
+      "start_offset" : 14,
+      "end_offset" : 27,
+      "type" : "word",
+      "position" : 2
+    },
+    {
+      "token" : "수업",
+      "start_offset" : 29,
+      "end_offset" : 31,
+      "type" : "word",
+      "position" : 3
+    },
+    ... (생략)
+    {
+      "token" : "습니다",
+      "start_offset" : 35,
+      "end_offset" : 38,
+      "type" : "word",
+      "position" : 7
+    }
+  ]
+}
+```
+
+discard_punctuation 옵션을 true로 활성화 시킴으로 마침표와 띄어쓰기 등을 필터링할수 있다.
+
+#### 예제 소스(explain: true 인 경우)
+
+```text
+// 요청 (explain: true 인 경우)
+GET /_analyze
+{
+  "tokenizer": {
+    "type": "nori_tokenizer",
+    "decompound_mode": "mixed",
+    "discard_punctuation": "true"
+  },
+  "text": "fastcampus 에서 elasticsearch? 수업을 들었습니다.",
+  "explain": true
+}
+
+// 결과
+{
+  "detail" : {
+    "custom_analyzer" : true,
+    "charfilters" : [ ],
+    "tokenizer" : {
+      "name" : "__anonymous__nori_tokenizer",
+      "tokens" : [
+        {
+          "token" : "fastcampus",
+          "start_offset" : 0,
+          "end_offset" : 10,
+          "type" : "word",
+          "position" : 0,
+          "bytes" : "[66 61 73 74 63 61 6d 70 75 73]",
+          "leftPOS" : "SL(Foreign language)",
+          "morphemes" : null,
+          "posType" : "MORPHEME",
+          "positionLength" : 1,
+          "reading" : null,
+          "rightPOS" : "SL(Foreign language)",
+          "termFrequency" : 1
+        },
+        {
+          "token" : "에서",
+          "start_offset" : 11,
+          "end_offset" : 13,
+          "type" : "word",
+          "position" : 1,
+          "bytes" : "[ec 97 90 ec 84 9c]",
+          "leftPOS" : "J(Ending Particle)",
+          "morphemes" : null,
+          "posType" : "MORPHEME",
+          "positionLength" : 1,
+          "reading" : null,
+          "rightPOS" : "J(Ending Particle)",
+          "termFrequency" : 1
+        },
+        {
+          "token" : "elasticsearch",
+          "start_offset" : 14,
+          "end_offset" : 27,
+          "type" : "word",
+          "position" : 2,
+          "bytes" : "[65 6c 61 73 74 69 63 73 65 61 72 63 68]",
+          "leftPOS" : "SL(Foreign language)",
+          "morphemes" : null,
+          "posType" : "MORPHEME",
+          "positionLength" : 1,
+          "reading" : null,
+          "rightPOS" : "SL(Foreign language)",
+          "termFrequency" : 1
+        },
+        {
+          "token" : "수업",
+          "start_offset" : 29,
+          "end_offset" : 31,
+          "type" : "word",
+          "position" : 3,
+          "bytes" : "[ec 88 98 ec 97 85]",
+          "leftPOS" : "NNG(General Noun)",
+          "morphemes" : null,
+          "posType" : "MORPHEME",
+          "positionLength" : 1,
+          "reading" : null,
+          "rightPOS" : "NNG(General Noun)",
+          "termFrequency" : 1
+        },
+        ... (생략)
+        {
+          "token" : "듣",
+          "start_offset" : 33,
+          "end_offset" : 34,
+          "type" : "word",
+          "position" : 5,
+          "bytes" : "[eb 93 a3]",
+          "leftPOS" : "VV(Verb)",
+          "morphemes" : null,
+          "posType" : "MORPHEME",
+          "positionLength" : 1,
+          "reading" : null,
+          "rightPOS" : "VV(Verb)",
+          "termFrequency" : 1
+        },
+        ... (생략)
+        {
+          "token" : "습니다",
+          "start_offset" : 35,
+          "end_offset" : 38,
+          "type" : "word",
+          "position" : 7,
+          "bytes" : "[ec 8a b5 eb 8b 88 eb 8b a4]",
+          "leftPOS" : "E(Verbal endings)",
+          "morphemes" : null,
+          "posType" : "MORPHEME",
+          "positionLength" : 1,
+          "reading" : null,
+          "rightPOS" : "E(Verbal endings)",
+          "termFrequency" : 1
+        }
+      ]
+    },
+    "tokenfilters" : [ ]
+  }
+}
+```
+
+explain을 true로 셋팅하여 분석결과를 자세하게 확인 가능하다.
+
+#### 예제 소스(user_dictionary_rules 를 정의한 경우)
+
+```text
+// 요청 (user_dictionary_rules 를 정의한 경우)
+GET /_analyze
+{
+  "tokenizer": {
+    "type": "nori_tokenizer",
+    "decompound_mode": "mixed",
+    "discard_punctuation": "true",
+    "user_dictionary_rules": [
+      "fastcampus",
+      "elasticsearch elastic search"
+    ]
+  },
+  "text": "fastcampus 에서 elasticsearch? 수업을 들었습니다.",
+  "explain": false
+}
+
+// 결과
+{
+  "tokens" : [
+    {
+      "token" : "fastcampus",
+      "start_offset" : 0,
+      "end_offset" : 10,
+      "type" : "word",
+      "position" : 0
+    },
+    {
+      "token" : "에서",
+      "start_offset" : 11,
+      "end_offset" : 13,
+      "type" : "word",
+      "position" : 1
+    },
+    {
+      "token" : "elasticsearch",
+      "start_offset" : 14,
+      "end_offset" : 27,
+      "type" : "word",
+      "position" : 2,
+      "positionLength" : 2
+    },
+    {
+      "token" : "elastic",
+      "start_offset" : 14,
+      "end_offset" : 21,
+      "type" : "word",
+      "position" : 2
+    },
+    {
+      "token" : "search",
+      "start_offset" : 21,
+      "end_offset" : 27,
+      "type" : "word",
+      "position" : 3
+    },
+    {
+      "token" : "수업",
+      "start_offset" : 29,
+      "end_offset" : 31,
+      "type" : "word",
+      "position" : 4
+    },
+    ... (생략)
+    {
+      "token" : "습니다",
+      "start_offset" : 35,
+      "end_offset" : 38,
+      "type" : "word",
+      "position" : 8
+    }
+  ]
+}
+```
+
+user_dictionary_rules를 추가함으로 `elastic`와 `search`가 토큰 결과에 추가되었다.
+
+#### 예제 소스(filter 중 nori_part_of_speech 추가)
+
+``` text
+// 요청 (filter 중 nori_part_of_speech 추가)
+GET /_analyze
+{
+  "tokenizer": {
+    "type": "nori_tokenizer",
+    "decompound_mode": "mixed",
+    "discard_punctuation": "true",
+    "user_dictionary_rules": [
+      "fastcampus",
+      "elasticsearch elastic search"
+    ]
+  },
+  "filter": {
+    "type": "nori_part_of_speech"
+  },
+  "text": "fastcampus 에서 elasticsearch? 수업을 들었습니다.",
+  "explain": false
+}
+
+// 결과
+{
+  "tokens" : [
+    {
+      "token" : "fastcampus",
+      "start_offset" : 0,
+      "end_offset" : 10,
+      "type" : "word",
+      "position" : 0
+    },
+    {
+      "token" : "elasticsearch",
+      "start_offset" : 14,
+      "end_offset" : 27,
+      "type" : "word",
+      "position" : 2,
+      "positionLength" : 2
+    },
+    ... (생략)
+    {
+      "token" : "듣",
+      "start_offset" : 33,
+      "end_offset" : 34,
+      "type" : "word",
+      "position" : 6
+    }
+  ]
+}
+```
+
+#### 예제 소스(filter 중 nori_part_of_speech에서 stoptags 추가)
+
+```text
+// 요청 (filter 중 nori_part_of_speech에서 stoptags 추가)
+GET /_analyze
+{
+  "tokenizer": {
+    "type": "nori_tokenizer",
+    "decompound_mode": "mixed",
+    "discard_punctuation": "true",
+    "user_dictionary_rules": [
+      "fastcampus",
+      "elasticsearch elastic search"
+    ]
+  },
+  "filter": {
+    "type": "nori_part_of_speech",
+    "stoptags": [
+      "E",
+      "IC",
+      "J",
+      "MAG","MAJ","MM",
+      "SP","SSC","SSO","SC","SE",
+      "XPN","XSA","XSN","XSV",
+      "UNA","NA","VSV",
+      "VV"
+    ]
+  },
+  "text": "fastcampus 에서 elasticsearch? 수업을 들었습니다.",
+  "explain": false
+}
+
+// 결과
+{
+  "tokens" : [
+    {
+      "token" : "fastcampus",
+      "start_offset" : 0,
+      "end_offset" : 10,
+      "type" : "word",
+      "position" : 0
+    },
+    {
+      "token" : "elasticsearch",
+      "start_offset" : 14,
+      "end_offset" : 27,
+      "type" : "word",
+      "position" : 2,
+      "positionLength" : 2
+    },
+    {
+      "token" : "elastic",
+      "start_offset" : 14,
+      "end_offset" : 21,
+      "type" : "word",
+      "position" : 2
+    },
+    {
+      "token" : "search",
+      "start_offset" : 21,
+      "end_offset" : 27,
+      "type" : "word",
+      "position" : 3
+    },
+    {
+      "token" : "수업",
+      "start_offset" : 29,
+      "end_offset" : 31,
+      "type" : "word",
+      "position" : 4
+    }
+  ]
+}
+```
+
+기본 stoptags 항목에 `VV(Verb)` 를 추가하여 명시함으로서 토큰결과에서 해당되는 것들이 삭제된채로 조회되었다.
+
+#### 예제 소스(filter 중 nori_readingform 추가)
+
+```text
+// 요청 (filter 중 nori_readingform 추가)
+GET /_analyze
+{
+  "tokenizer": {
+    "type": "nori_tokenizer"
+  },
+  "filter": {
+    "type": "nori_readingform"
+  },
+  "text": "大韓民國",
+  "explain": false
+}
+
+// 결과
+{
+  "tokens" : [
+    {
+      "token" : "대한",
+      "start_offset" : 0,
+      "end_offset" : 2,
+      "type" : "word",
+      "position" : 0
+    },
+    {
+      "token" : "민국",
+      "start_offset" : 2,
+      "end_offset" : 4,
+      "type" : "word",
+      "position" : 1
+    }
+  ]
+}
+```
+
+한자 사전 내에 大韓, 民國으로 분리가 되어 등록되어 있기 때문에 위의 예제 결과가 나오게 되었음.
+한자 사전에 등록되지 않은 것은 별도로 등록하여 사용해야 한다.
+
+#### 예제 소스(filter 중 nori_number 추가)
+
+```text(filter 중 nori_number 추가)
+// 요청
+GET /_analyze
+{
+  "tokenizer": {
+    "type": "nori_tokenizer",
+    "discard_punctuation": "false"
+  },
+  "filter": [
+    {
+      "type": "nori_part_of_speech",
+      "stoptags": ["SP"]
+    },
+    {
+      "type": "nori_number"
+    }
+  ],
+  "text": "십만이천오백과 3.2천",
+  "explain": false
+}
+
+// 결과
+{
+  "tokens" : [
+    {
+      "token" : "102500",
+      "start_offset" : 0,
+      "end_offset" : 6,
+      "type" : "word",
+      "position" : 0
+    },
+    {
+      "token" : "과",
+      "start_offset" : 6,
+      "end_offset" : 7,
+      "type" : "word",
+      "position" : 1
+    },
+    {
+      "token" : "3200",
+      "start_offset" : 8,
+      "end_offset" : 12,
+      "type" : "word",
+      "position" : 2
+    }
+  ]
+}
+```
+
+- 위 옵션 중 `discard_punctuation`를 true로 하게되면 소수점 단위를 삭제할수 있기때문에 false로 분석 진행
+- `stoptags` 중 `SP(Space)`만 필터링하도록 설정
+
+## Index Modules - Index shard allocation
