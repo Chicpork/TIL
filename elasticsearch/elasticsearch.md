@@ -1411,3 +1411,139 @@ GET /_analyze
 - `stoptags` 중 `SP(Space)`만 필터링하도록 설정
 
 ## Index Modules - Index shard allocation
+
+node에 shard를 할당 하기 위한 제어 역할 (index 별로 적용가능)
+
+### Shard allocation filtering
+
+- 어떤 노드에 어떤 샤드를 할당 시킬지 관리
+- index shard allocation 기능
+- cluster.routing.allocation 설정을 통해 동적으로 할 수 있음
+- 같은 노드에 primary와 replica shard는 절대 할당 되지 않음
+
+```text
+$ ./bin/elasticsearch -Enode.attr.size=medium
+
+PUT test/_settings
+{
+  "index.routing.allocation.include.size":"big,medium"
+}
+```
+
+- node의 size에 대한 구분을 small, medium, big 이라고 가정하고 정의하는 내용
+- test라는 index의 shard는 big이거나 medium속성을 가진 node에 할당
+
+
+### index allocation filter settings
+
+아래 항목기준에 따라 filter됨.
+
+- `index.routing.allocation.include.{attribute}` : 적어도 하나만 포함해도 됨
+- `index.routing.allocation.require.{attribute}` : 모두 가지고 있어야 함
+- `index.routing.allocation.exclude.{attribute}`
+
+내부 built-in attributes(nodes에 대한)는 _name, _host_ip, _publish_ip, _ip, _host, _id, _tier 로 구성되어 있음
+
+
+### Delayed allocation
+
+노드 자체에 샤드를 지정시킬때 지연시킬수 있음.
+특정 노드를 재시작했을 때 해당 노드에 있던 샤드가 재시작함으로 인해 rebalancing이 이뤄지거나, replica shard가 primary shard가 될수 있음.
+이를 문제가 있어서 재시작하는 경우가 아니라면 위 설정을 통해 재시작 진행 가능.
+
+#### 노드 다운시
+
+unassinged shard에 대한 할당 지연을 관리
+
+##### 마스터 노드의 액션순서
+
+- 다운된 노드의 primary shard의 replica shard를 primary로 선출
+- 신규(누락된) replica shard를 다른 노드에 배치
+- 모든 신규(누락된) replica shard는 primary shard를 통해서 복사
+- 나머지 노드를 기준으로 샤드를 균등 배치
+- 다운된 노드가 다시 살아 나게 되면 살아난 노드로 shard를 rebalance
+- index.unassigned.node_left.delayed_timeout이 설정은 노드가 다운되고 바로 재시작 될 경우 rebalancing되는 overhead를 줄이기 위해 설정
+  - 기본 1분, 변경 시 임시 설정되고 클러스터 재시작시 다시 1분으로 설정됨)
+- 다운된 노드의 primary shard는 노드가 재시작 되면 삭제
+
+#### 단순 재시작 되는 경우
+
+delayed_timeout 설정으로 불필요한 relocation 또는 rebalance 되는 일이 없도록 시간을 설정하는 것이 중요
+
+#### 설정 예시
+
+```text
+// 전체 인덱스에 설정하는 방법
+PUT _all/_settings
+{
+  "settings":{
+    "index.unassigned.node_left.delayed_timeout":"5m"
+  }
+}
+
+//만약 node가 다시 돌아오지 않고 바로 누락된 shard 를 할당하고자 한다면 아래와 같이 설정함
+
+PUT _all/_settings
+{
+  "settings":{
+    "index.unassigned.node_left.delayed_timeout":"0"
+  }
+}
+```
+
+### Recovery prioritization
+
+할당 되지 않은 샤드는 아래와 같은 우선 순위에 따라 복구
+
+1. index.priority 설정 값이 높은 순으로 복구 (dynamic setting으로 설정)
+2. index의 생성 시간이 최신인 것부터 복구(기본설정)
+3. index명 내림차순으로 복구
+
+### Total shards per node
+
+노드 별 같은 인덱스에 대한 샤드 수를 제한 (기본 무제한)
+
+- `index.routing.allocation.total_shards_per_node`
+  - 노드에 할당되는 단일 index shard의 크기
+  - primary shard와 replica shard의 총합
+- `cluster.routing.allocation.total_shards_per_node`
+  - 노드에 할당되는 primary shard와 replica shard의 최대 크기(기본 무제한)
+
+### Data tier allocation
+
+- Index level 설정으로 노드의 데이터 계층으로 제어
+- node.attr 설정을 위해 _tier와 _tier_preference의 attributes를 제공
+- `index.routing.allocation.include._tier`
+- `index.routing.allocation.require._tier`
+- `index.routing.allocation.exclude._tier`
+- `index.routing.allocation.include._tier_preference`
+  - node에 해당 하는 role의 node가 없을 경우 선언된 다음 순서대로 할당이 되도록 하며, 할당 되지 않은 상태로 shard가 유실 되지 않도록 함.
+
+## Index Modules - Merging
+
+- elasticsearch에서의 shard는 lucene에서의 index이며, segments는 immutable
+- 이런 작은 세그먼트 파일들의 큰 세그먼트 파일로 합쳐 지면서 인덱스 유지
+- Merge process : 자동으로 리소스 사용량에 따라 병합과 검색과 같은 동작에서의 리소스 균형을 맞춤
+  - \ConcurrentMergeScheduler 를 이용해서 merge 기능을 수행
+- `index.merge.scheduler.max_thread_count` : 한 번에 병합 할 수 있는 단일 샤드의 최대 스레드 수
+
+## Index Modules - Slowlog
+
+기본 설정은 log4j2.properties에 있으며, index update settings를 통해서 설정 가능
+
+```text
+PUT /my-index-000001/_settings
+{
+  "index.search.slowlog.threshold.query.wran": "10s",
+  "index.search.slowlog.threshold.query.info": "5s",
+  "index.search.slowlog.threshold.query.debug": "2s",
+  "index.search.slowlog.threshold.query.trace": "500ms",
+  "index.search.slowlog.threshold.fetch.wran": "1s",
+  "index.search.slowlog.threshold.fetch.info": "80ms",
+  "index.search.slowlog.threshold.fetch.debug": "500ms",
+  "index.search.slowlog.threshold.fetch.trace": "200ms",
+  "index.search.slowlog.level":"info"
+}
+```
+
+위 설정 예시를 보면 query phase와 fetch phase로 나눠지는데 elasticsearchs에서 검색은 document id를 가져오는 query 부분과 해당 내용을 가져오는 fetch 부분이 있기때문
